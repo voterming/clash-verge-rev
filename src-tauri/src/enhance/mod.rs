@@ -5,6 +5,7 @@ mod script;
 pub mod seq;
 mod tun;
 
+<<<<<<< HEAD
 use self::{
     chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
     field::{use_keys, use_lowercase, use_sort},
@@ -292,6 +293,55 @@ async fn collect_profile_items() -> ProfileItems {
 
     ProfileItems {
         config: current,
+=======
+use self::chain::*;
+use self::field::*;
+use self::merge::*;
+use self::script::*;
+use self::seq::*;
+use self::tun::*;
+use crate::config::Config;
+use crate::utils::tmpl;
+use serde_yaml::Mapping;
+use std::collections::HashMap;
+use std::collections::HashSet;
+
+type ResultLog = Vec<(String, String)>;
+
+/// Enhance mode
+/// 返回最终订阅、该订阅包含的键、和script执行的结果
+pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+    // config.yaml 的订阅
+    let clash_config = { Config::clash().latest().0.clone() };
+
+    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled) = {
+        let verge = Config::verge();
+        let verge = verge.latest();
+        (
+            verge.clash_core.clone(),
+            verge.enable_tun_mode.unwrap_or(false),
+            verge.enable_builtin_enhanced.unwrap_or(true),
+            verge.verge_socks_enabled.unwrap_or(false),
+            verge.verge_http_enabled.unwrap_or(false),
+        )
+    };
+    #[cfg(not(target_os = "windows"))]
+    let redir_enabled = {
+        let verge = Config::verge();
+        let verge = verge.latest();
+        verge.verge_redir_enabled.unwrap_or(false)
+    };
+    #[cfg(target_os = "linux")]
+    let tproxy_enabled = {
+        let verge = Config::verge();
+        let verge = verge.latest();
+        verge.verge_tproxy_enabled.unwrap_or(false)
+    };
+
+    // 从profiles里拿东西
+    let (
+        mut config,
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         merge_item,
         script_item,
         rules_item,
@@ -299,6 +349,7 @@ async fn collect_profile_items() -> ProfileItems {
         groups_item,
         global_merge,
         global_script,
+<<<<<<< HEAD
         profile_name: name,
     }
 }
@@ -315,16 +366,115 @@ fn process_global_items(
     if let ChainType::Merge(merge) = global_merge.data {
         exists_keys.extend(use_keys(&merge));
         config = use_merge(&merge, config.to_owned());
+=======
+        profile_name,
+    ) = {
+        let profiles = Config::profiles();
+        let profiles = profiles.latest();
+
+        let current = profiles.current_mapping().unwrap_or_default();
+        let merge = profiles
+            .get_item(&profiles.current_merge().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Merge(Mapping::new()),
+            });
+        let script = profiles
+            .get_item(&profiles.current_script().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
+            });
+        let rules = profiles
+            .get_item(&profiles.current_rules().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Rules(SeqMap::default()),
+            });
+        let proxies = profiles
+            .get_item(&profiles.current_proxies().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Proxies(SeqMap::default()),
+            });
+        let groups = profiles
+            .get_item(&profiles.current_groups().unwrap_or_default())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "".into(),
+                data: ChainType::Groups(SeqMap::default()),
+            });
+
+        let global_merge = profiles
+            .get_item(&"Merge".to_string())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "Merge".into(),
+                data: ChainType::Merge(Mapping::new()),
+            });
+
+        let global_script = profiles
+            .get_item(&"Script".to_string())
+            .ok()
+            .and_then(<Option<ChainItem>>::from)
+            .unwrap_or_else(|| ChainItem {
+                uid: "Script".into(),
+                data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
+            });
+
+        let name = profiles
+            .get_item(&profiles.get_current().unwrap_or_default())
+            .ok()
+            .and_then(|item| item.name.clone())
+            .unwrap_or_default();
+
+        (
+            current,
+            merge,
+            script,
+            rules,
+            proxies,
+            groups,
+            global_merge,
+            global_script,
+            name,
+        )
+    };
+
+    let mut result_map = HashMap::new(); // 保存脚本日志
+    let mut exists_keys = use_keys(&config); // 保存出现过的keys
+
+    // 全局Merge和Script
+    if let ChainType::Merge(merge) = global_merge.data {
+        exists_keys.extend(use_keys(&merge));
+        config = use_merge(merge, config.to_owned());
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     }
 
     if let ChainType::Script(script) = global_script.data {
         let mut logs = vec![];
+<<<<<<< HEAD
         match use_script(script, &config, profile_name) {
+=======
+
+        match use_script(script, config.to_owned(), profile_name.to_owned()) {
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
                 logs.extend(res_logs);
             }
+<<<<<<< HEAD
             Err(err) => logs.push(("exception".into(), err.to_string().into())),
         }
         result_map.insert(global_script.uid, logs);
@@ -345,6 +495,15 @@ fn process_profile_items(
     script_item: ChainItem,
     profile_name: &String,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+=======
+            Err(err) => logs.push(("exception".into(), err.to_string())),
+        }
+
+        result_map.insert(global_script.uid, logs);
+    }
+
+    // 订阅关联的Merge、Script、Rules、Proxies、Groups
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     if let ChainType::Rules(rules) = rules_item.data {
         config = use_seq(rules, config.to_owned(), "rules");
     }
@@ -359,17 +518,27 @@ fn process_profile_items(
 
     if let ChainType::Merge(merge) = merge_item.data {
         exists_keys.extend(use_keys(&merge));
+<<<<<<< HEAD
         config = use_merge(&merge, config.to_owned());
+=======
+        config = use_merge(merge, config.to_owned());
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     }
 
     if let ChainType::Script(script) = script_item.data {
         let mut logs = vec![];
+<<<<<<< HEAD
         match use_script(script, &config, profile_name) {
+=======
+
+        match use_script(script, config.to_owned(), profile_name.to_owned()) {
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
                 logs.extend(res_logs);
             }
+<<<<<<< HEAD
             Err(err) => logs.push(("exception".into(), err.to_string().into())),
         }
         result_map.insert(script_item.uid, logs);
@@ -392,6 +561,21 @@ async fn merge_default_config(
                 val.as_mapping().cloned().unwrap_or_else(Mapping::new)
             });
             let patch_tun = value.as_mapping().cloned().unwrap_or_else(Mapping::new);
+=======
+            Err(err) => logs.push(("exception".into(), err.to_string())),
+        }
+
+        result_map.insert(script_item.uid, logs);
+    }
+
+    // 合并默认的config
+    for (key, value) in clash_config.into_iter() {
+        if key.as_str() == Some("tun") {
+            let mut tun = config.get_mut("tun").map_or(Mapping::new(), |val| {
+                val.as_mapping().cloned().unwrap_or(Mapping::new())
+            });
+            let patch_tun = value.as_mapping().cloned().unwrap_or(Mapping::new());
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             for (key, value) in patch_tun.into_iter() {
                 tun.insert(key, value);
             }
@@ -405,12 +589,15 @@ async fn merge_default_config(
                 config.remove("port");
                 continue;
             }
+<<<<<<< HEAD
             #[cfg(target_os = "windows")]
             {
                 if key.as_str() == Some("redir-port") {
                     continue;
                 }
             }
+=======
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             #[cfg(not(target_os = "windows"))]
             {
                 if key.as_str() == Some("redir-port") && !redir_enabled {
@@ -425,6 +612,7 @@ async fn merge_default_config(
                     continue;
                 }
             }
+<<<<<<< HEAD
             #[cfg(not(target_os = "linux"))]
             {
                 if key.as_str() == Some("tproxy-port") {
@@ -456,26 +644,44 @@ async fn merge_default_config(
 }
 
 fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
+=======
+            config.insert(key, value);
+        }
+    }
+
+    // 内建脚本最后跑
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     if enable_builtin {
         ChainItem::builtin()
             .into_iter()
             .filter(|(s, _)| s.is_support(clash_core.as_ref()))
             .map(|(_, c)| c)
             .for_each(|item| {
+<<<<<<< HEAD
                 logging!(debug, Type::Core, "run builtin script {}", item.uid);
                 if let ChainType::Script(script) = item.data {
                     match use_script(script, &config, &String::from("")) {
+=======
+                log::debug!(target: "app", "run builtin script {}", item.uid);
+                if let ChainType::Script(script) = item.data {
+                    match use_script(script, config.to_owned(), "".to_string()) {
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         Ok((res_config, _)) => {
                             config = res_config;
                         }
                         Err(err) => {
+<<<<<<< HEAD
                             logging!(error, Type::Core, "builtin script error `{err}`");
+=======
+                            log::error!(target: "app", "builtin script error `{err}`");
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }
                     }
                 }
             });
     }
 
+<<<<<<< HEAD
     config
 }
 
@@ -825,4 +1031,14 @@ proxy-groups:
         assert_eq!(proxies.len(), 1);
         assert_eq!(proxies[0].as_str(), Some("DIRECT"));
     }
+=======
+    config = use_tun(config, enable_tun).await;
+    config = use_sort(config);
+
+    let mut exists_set = HashSet::new();
+    exists_set.extend(exists_keys);
+    exists_keys = exists_set.into_iter().collect();
+
+    (config, exists_keys, result_map)
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }

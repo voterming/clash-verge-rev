@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::notification::{NotificationEvent, notify_event};
@@ -309,6 +310,33 @@ impl Hotkey {
         if let Some(hotkeys) = hotkeys {
             logging!(debug, Type::Hotkey, "Has {} hotkeys need to register", hotkeys.len());
 
+=======
+use crate::core::handle;
+use crate::{config::Config, feat, log_err};
+use anyhow::{bail, Result};
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
+use std::{collections::HashMap, sync::Arc};
+use tauri::Manager;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, ShortcutState};
+pub struct Hotkey {
+    current: Arc<Mutex<Vec<String>>>, // 保存当前的热键设置
+}
+
+impl Hotkey {
+    pub fn global() -> &'static Hotkey {
+        static HOTKEY: OnceCell<Hotkey> = OnceCell::new();
+
+        HOTKEY.get_or_init(|| Hotkey {
+            current: Arc::new(Mutex::new(Vec::new())),
+        })
+    }
+
+    pub fn init(&self) -> Result<()> {
+        let verge = Config::verge();
+
+        if let Some(hotkeys) = verge.latest().hotkeys.as_ref() {
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
                 let func = iter.next();
@@ -316,6 +344,7 @@ impl Hotkey {
 
                 match (key, func) {
                     (Some(key), Some(func)) => {
+<<<<<<< HEAD
                         logging!(debug, Type::Hotkey, "Registering hotkey: {} -> {}", key, func);
                         if let Err(e) = self.register(key, func).await {
                             logging!(
@@ -335,10 +364,14 @@ impl Hotkey {
                                 func
                             );
                         }
+=======
+                        log_err!(self.register(key, func));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                     }
                     _ => {
                         let key = key.unwrap_or("None");
                         let func = func.unwrap_or("None");
+<<<<<<< HEAD
                         logging!(
                             error,
                             Type::Hotkey,
@@ -352,11 +385,19 @@ impl Hotkey {
             self.current.store(Arc::new(hotkeys));
         } else {
             logging!(debug, Type::Hotkey, "No hotkeys configured");
+=======
+                        log::error!(target: "app", "invalid hotkey `{key}`:`{func}`");
+                    }
+                }
+            }
+            self.current.lock().clone_from(hotkeys);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         }
 
         Ok(())
     }
 
+<<<<<<< HEAD
     pub fn reset(&self) -> Result<()> {
         let app_handle = handle::Handle::app_handle();
         let manager = app_handle.global_shortcut();
@@ -382,6 +423,58 @@ impl Hotkey {
         // Extract current hotkeys before async operations
         let current_hotkeys = &*self.current.load();
         let old_map = Self::get_map_from_vec(current_hotkeys);
+=======
+    pub fn register(&self, hotkey: &str, func: &str) -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let manager = app_handle.global_shortcut();
+
+        if manager.is_registered(hotkey) {
+            manager.unregister(hotkey)?;
+        }
+
+        let f = match func.trim() {
+            "open_or_close_dashboard" => feat::open_or_close_dashboard,
+            "clash_mode_rule" => || feat::change_clash_mode("rule".into()),
+            "clash_mode_global" => || feat::change_clash_mode("global".into()),
+            "clash_mode_direct" => || feat::change_clash_mode("direct".into()),
+            "toggle_system_proxy" => feat::toggle_system_proxy,
+            "toggle_tun_mode" => feat::toggle_tun_mode,
+            "quit" => || feat::quit(Some(0)),
+
+            _ => bail!("invalid function \"{func}\""),
+        };
+
+        let _ = manager.on_shortcut(hotkey, move |app_handle, hotkey, event| {
+            if event.state == ShortcutState::Pressed {
+                if hotkey.key == Code::KeyQ {
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        if window.is_focused().unwrap_or(false) {
+                            f();
+                        }
+                    }
+                } else {
+                    f();
+                }
+            }
+        });
+
+        log::debug!(target: "app", "register hotkey {hotkey} {func}");
+        Ok(())
+    }
+
+    pub fn unregister(&self, hotkey: &str) -> Result<()> {
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        let manager = app_handle.global_shortcut();
+        manager.unregister(hotkey)?;
+
+        log::debug!(target: "app", "unregister hotkey {hotkey}");
+        Ok(())
+    }
+
+    pub fn update(&self, new_hotkeys: Vec<String>) -> Result<()> {
+        let mut current = self.current.lock();
+        let old_map = Self::get_map_from_vec(&current);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         let new_map = Self::get_map_from_vec(&new_hotkeys);
 
         let (del, add) = Self::get_diff(old_map, new_map);
@@ -390,12 +483,20 @@ impl Hotkey {
             let _ = self.unregister(key);
         });
 
+<<<<<<< HEAD
         for (key, func) in add.iter() {
             self.register(key, func).await?;
         }
 
         // Update the current hotkeys after all async operations
         self.current.store(Arc::new(new_hotkeys));
+=======
+        add.iter().for_each(|(key, func)| {
+            log_err!(self.register(key, func));
+        });
+
+        *current = new_hotkeys;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         Ok(())
     }
 
@@ -407,9 +508,15 @@ impl Hotkey {
             let func = iter.next();
             let key = iter.next();
 
+<<<<<<< HEAD
             if let (Some(func), Some(key)) = (func, key) {
                 let func = func.trim();
                 let key = key.trim();
+=======
+            if func.is_some() && key.is_some() {
+                let func = func.unwrap().trim();
+                let key = key.unwrap().trim();
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 map.insert(key, func);
             }
         });
@@ -447,9 +554,15 @@ impl Hotkey {
 
 impl Drop for Hotkey {
     fn drop(&mut self) {
+<<<<<<< HEAD
         let app_handle = handle::Handle::app_handle();
         if let Err(e) = app_handle.global_shortcut().unregister_all() {
             logging!(error, Type::Hotkey, "Error unregistering all hotkeys: {:?}", e);
+=======
+        let app_handle = handle::Handle::global().app_handle().unwrap();
+        if let Err(e) = app_handle.global_shortcut().unregister_all() {
+            log::error!(target:"app", "Error unregistering all hotkeys: {:?}", e);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         }
     }
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
@@ -6,6 +7,15 @@ import {
   CheckBoxRounded,
   CheckBoxOutlineBlankRounded,
 } from '@mui/icons-material'
+=======
+import dayjs from "dayjs";
+import { mutate } from "swr";
+import { useEffect, useState } from "react";
+import { useLockFn } from "ahooks";
+import { useTranslation } from "react-i18next";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 import {
   Box,
   Typography,
@@ -15,6 +25,7 @@ import {
   MenuItem,
   Menu,
   CircularProgress,
+<<<<<<< HEAD
 } from '@mui/material'
 import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
@@ -28,11 +39,17 @@ import { EditorViewer } from '@/components/profile/editor-viewer'
 import { GroupsEditorViewer } from '@/components/profile/groups-editor-viewer'
 import { RulesEditorViewer } from '@/components/profile/rules-editor-viewer'
 import { useEditorDocument } from '@/hooks/use-editor-document'
+=======
+} from "@mui/material";
+import { RefreshRounded, DragIndicatorRounded } from "@mui/icons-material";
+import { useLoadingCache, useSetLoadingCache } from "@/services/states";
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 import {
   viewProfile,
   readProfileFile,
   updateProfile,
   saveProfileFile,
+<<<<<<< HEAD
   getNextUpdateTime,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -76,6 +93,37 @@ export const ProfileItem = (props: Props) => {
     isSelected,
     onSelectionChange,
   } = props
+=======
+} from "@/services/cmds";
+import { Notice } from "@/components/base";
+import { GroupsEditorViewer } from "@/components/profile/groups-editor-viewer";
+import { RulesEditorViewer } from "@/components/profile/rules-editor-viewer";
+import { EditorViewer } from "@/components/profile/editor-viewer";
+import { ProfileBox } from "./profile-box";
+import parseTraffic from "@/utils/parse-traffic";
+import { ConfirmViewer } from "@/components/profile/confirm-viewer";
+import { open } from "@tauri-apps/plugin-shell";
+import { ProxiesEditorViewer } from "./proxies-editor-viewer";
+const round = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+interface Props {
+  id: string;
+  selected: boolean;
+  activating: boolean;
+  itemData: IProfileItem;
+  onSelect: (force: boolean) => void;
+  onEdit: () => void;
+  onSave?: (prev?: string, curr?: string) => void;
+  onDelete: () => void;
+}
+
+export const ProfileItem = (props: Props) => {
+  const { selected, activating, itemData, onSelect, onEdit, onSave, onDelete } =
+    props;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   const {
     attributes,
     listeners,
@@ -83,6 +131,7 @@ export const ProfileItem = (props: Props) => {
     transform,
     transition,
     isDragging,
+<<<<<<< HEAD
   } = useSortable({
     id,
   })
@@ -220,10 +269,22 @@ export const ProfileItem = (props: Props) => {
       window.removeEventListener('verge://timer-updated', handleTimerUpdate)
     }
   }, [fetchNextUpdateTime, itemData.uid, showNextUpdate])
+=======
+  } = useSortable({ id: props.id });
+
+  const { t } = useTranslation();
+  const [anchorEl, setAnchorEl] = useState<any>(null);
+  const [position, setPosition] = useState({ left: 0, top: 0 });
+  const loadingCache = useLoadingCache();
+  const setLoadingCache = useSetLoadingCache();
+
+  const { uid, name = "Profile", extra, updated = 0, option } = itemData;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   // local file mode
   // remote file mode
   // remote file mode
+<<<<<<< HEAD
   const hasUrl = !!itemData.url
   const hasExtra = !!extra // only subscription url has extra info
   const hasHome = !!itemData.home // only subscription url has home page
@@ -354,10 +415,117 @@ export const ProfileItem = (props: Props) => {
       showNotice.error(err)
     }
   })
+=======
+  const hasUrl = !!itemData.url;
+  const hasExtra = !!extra; // only subscription url has extra info
+  const hasHome = !!itemData.home; // only subscription url has home page
+
+  const { upload = 0, download = 0, total = 0 } = extra ?? {};
+  const from = parseUrl(itemData.url);
+  const description = itemData.desc;
+  const expire = parseExpire(extra?.expire);
+  const progress = Math.min(
+    Math.round(((download + upload) * 100) / (total + 0.01)) + 1,
+    100
+  );
+
+  const loading = loadingCache[itemData.uid] ?? false;
+
+  // interval update fromNow field
+  const [, setRefresh] = useState({});
+  useEffect(() => {
+    if (!hasUrl) return;
+
+    let timer: any = null;
+
+    const handler = () => {
+      const now = Date.now();
+      const lastUpdate = updated * 1000;
+      // 大于一天的不管
+      if (now - lastUpdate >= 24 * 36e5) return;
+
+      const wait = now - lastUpdate >= 36e5 ? 30e5 : 5e4;
+
+      timer = setTimeout(() => {
+        setRefresh({});
+        handler();
+      }, wait);
+    };
+
+    handler();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [hasUrl, updated]);
+
+  const [fileOpen, setFileOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [proxiesOpen, setProxiesOpen] = useState(false);
+  const [groupsOpen, setGroupsOpen] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
+  const [scriptOpen, setScriptOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const onOpenHome = () => {
+    setAnchorEl(null);
+    open(itemData.home ?? "");
+  };
+
+  const onEditInfo = () => {
+    setAnchorEl(null);
+    onEdit();
+  };
+
+  const onEditFile = () => {
+    setAnchorEl(null);
+    setFileOpen(true);
+  };
+
+  const onEditRules = () => {
+    setAnchorEl(null);
+    setRulesOpen(true);
+  };
+
+  const onEditProxies = () => {
+    setAnchorEl(null);
+    setProxiesOpen(true);
+  };
+
+  const onEditGroups = () => {
+    setAnchorEl(null);
+    setGroupsOpen(true);
+  };
+
+  const onEditMerge = () => {
+    setAnchorEl(null);
+    setMergeOpen(true);
+  };
+
+  const onEditScript = () => {
+    setAnchorEl(null);
+    setScriptOpen(true);
+  };
+
+  const onForceSelect = () => {
+    setAnchorEl(null);
+    onSelect(true);
+  };
+
+  const onOpenFile = useLockFn(async () => {
+    setAnchorEl(null);
+    try {
+      await viewProfile(itemData.uid);
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
+  });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   /// 0 不使用任何代理
   /// 1 使用订阅好的代理
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
+<<<<<<< HEAD
   const onUpdate = useLockFn(async (type: 0 | 1 | 2): Promise<void> => {
     setAnchorEl(null)
     setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }))
@@ -374,10 +542,31 @@ export const ProfileItem = (props: Props) => {
       } else {
         option.with_proxy = true
         option.self_proxy = false
+=======
+  const onUpdate = useLockFn(async (type: 0 | 1 | 2) => {
+    setAnchorEl(null);
+    setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }));
+
+    const option: Partial<IProfileOption> = {};
+
+    if (type === 0) {
+      option.with_proxy = false;
+      option.self_proxy = false;
+    } else if (type === 1) {
+      // nothing
+    } else if (type === 2) {
+      if (itemData.option?.self_proxy) {
+        option.with_proxy = false;
+        option.self_proxy = true;
+      } else {
+        option.with_proxy = true;
+        option.self_proxy = false;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       }
     }
 
     try {
+<<<<<<< HEAD
       // 调用后端更新（后端会自动处理回退逻辑）
       const payload = Object.keys(option).length > 0 ? option : undefined
       await updateProfile(itemData.uid, payload)
@@ -441,25 +630,60 @@ export const ProfileItem = (props: Props) => {
     },
     {
       label: menuLabels.editRules,
+=======
+      await updateProfile(itemData.uid, option);
+      mutate("getProfiles");
+    } catch (err: any) {
+      const errmsg = err?.message || err.toString();
+      Notice.error(
+        errmsg.replace(/error sending request for url (\S+?): /, "")
+      );
+    } finally {
+      setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }));
+    }
+  });
+
+  const urlModeMenu = (
+    hasHome ? [{ label: "Home", handler: onOpenHome, disabled: false }] : []
+  ).concat([
+    { label: "Select", handler: onForceSelect, disabled: false },
+    { label: "Edit Info", handler: onEditInfo, disabled: false },
+    { label: "Edit File", handler: onEditFile, disabled: false },
+    {
+      label: "Edit Rules",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       handler: onEditRules,
       disabled: !option?.rules,
     },
     {
+<<<<<<< HEAD
       label: menuLabels.editProxies,
+=======
+      label: "Edit Proxies",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       handler: onEditProxies,
       disabled: !option?.proxies,
     },
     {
+<<<<<<< HEAD
       label: menuLabels.editGroups,
+=======
+      label: "Edit Groups",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       handler: onEditGroups,
       disabled: !option?.groups,
     },
     {
+<<<<<<< HEAD
       label: menuLabels.extendConfig,
+=======
+      label: "Extend Config",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       handler: onEditMerge,
       disabled: !option?.merge,
     },
     {
+<<<<<<< HEAD
       label: menuLabels.extendScript,
       handler: onEditScript,
       disabled: !option?.script,
@@ -513,25 +737,62 @@ export const ProfileItem = (props: Props) => {
     },
     {
       label: menuLabels.editRules,
+=======
+      label: "Extend Script",
+      handler: onEditScript,
+      disabled: !option?.script,
+    },
+    { label: "Open File", handler: onOpenFile, disabled: false },
+    { label: "Update", handler: () => onUpdate(0), disabled: false },
+    { label: "Update(Proxy)", handler: () => onUpdate(2), disabled: false },
+    {
+      label: "Delete",
+      handler: () => {
+        setAnchorEl(null);
+        setConfirmOpen(true);
+      },
+      disabled: false,
+    },
+  ]);
+  const fileModeMenu = [
+    { label: "Select", handler: onForceSelect, disabled: false },
+    { label: "Edit Info", handler: onEditInfo, disabled: false },
+    { label: "Edit File", handler: onEditFile, disabled: false },
+    {
+      label: "Edit Rules",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       handler: onEditRules,
       disabled: !option?.rules,
     },
     {
+<<<<<<< HEAD
       label: menuLabels.editProxies,
+=======
+      label: "Edit Proxies",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       handler: onEditProxies,
       disabled: !option?.proxies,
     },
     {
+<<<<<<< HEAD
       label: menuLabels.editGroups,
+=======
+      label: "Edit Groups",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       handler: onEditGroups,
       disabled: !option?.groups,
     },
     {
+<<<<<<< HEAD
       label: menuLabels.extendConfig,
+=======
+      label: "Extend Config",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       handler: onEditMerge,
       disabled: !option?.merge,
     },
     {
+<<<<<<< HEAD
       label: menuLabels.extendScript,
       handler: onEditScript,
       disabled: !option?.script,
@@ -621,18 +882,49 @@ export const ProfileItem = (props: Props) => {
     onSave?.(scriptDocument.savedValue, currentValue)
     scriptDocument.markSaved(currentValue)
   })
+=======
+      label: "Extend Script",
+      handler: onEditScript,
+      disabled: !option?.script,
+    },
+    { label: "Open File", handler: onOpenFile, disabled: false },
+    {
+      label: "Delete",
+      handler: () => {
+        setAnchorEl(null);
+        setConfirmOpen(true);
+      },
+      disabled: false,
+    },
+  ];
+
+  const boxStyle = {
+    height: 26,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  };
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   return (
     <Box
       sx={{
+<<<<<<< HEAD
         position: 'relative',
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined,
+=======
+        position: "relative",
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? "calc(infinity)" : undefined,
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       }}
     >
       <ProfileBox
         aria-selected={selected}
+<<<<<<< HEAD
         onClick={(e) => {
           // 如果正在激活中，阻止重复点击
           if (activating) {
@@ -647,20 +939,36 @@ export const ProfileItem = (props: Props) => {
           setPosition({ top: clientY, left: clientX })
           setAnchorEl(event.currentTarget as HTMLElement)
           event.preventDefault()
+=======
+        onClick={() => onSelect(false)}
+        onContextMenu={(event) => {
+          const { clientX, clientY } = event;
+          setPosition({ top: clientY, left: clientX });
+          setAnchorEl(event.currentTarget);
+          event.preventDefault();
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         }}
       >
         {activating && (
           <Box
             sx={{
+<<<<<<< HEAD
               position: 'absolute',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
+=======
+              position: "absolute",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               top: 10,
               left: 10,
               right: 10,
               bottom: 2,
               zIndex: 10,
+<<<<<<< HEAD
               backdropFilter: 'blur(2px)',
               backgroundColor: 'rgba(0, 0, 0, 0.1)',
             }}
@@ -701,22 +1009,46 @@ export const ProfileItem = (props: Props) => {
                 margin: 'auto 0',
                 ...(batchMode && { marginLeft: '-4px' }),
               }}
+=======
+              backdropFilter: "blur(2px)",
+            }}
+          >
+            <CircularProgress color="inherit" size={20} />
+          </Box>
+        )}
+        <Box position="relative">
+          <Box sx={{ display: "flex", justifyContent: "start" }}>
+            <Box
+              ref={setNodeRef}
+              sx={{ display: "flex", margin: "auto 0" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               {...attributes}
               {...listeners}
             >
               <DragIndicatorRounded
                 sx={[
+<<<<<<< HEAD
                   { cursor: 'move', marginLeft: '-6px' },
                   ({ palette: { text } }) => {
                     return { color: text.primary }
+=======
+                  { cursor: "move", marginLeft: "-6px" },
+                  ({ palette: { text } }) => {
+                    return { color: text.primary };
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   },
                 ]}
               />
             </Box>
 
             <Typography
+<<<<<<< HEAD
               width={batchMode ? 'calc(100% - 56px)' : 'calc(100% - 36px)'}
               sx={{ fontSize: '18px', fontWeight: '600', lineHeight: '26px' }}
+=======
+              width="calc(100% - 36px)"
+              sx={{ fontSize: "18px", fontWeight: "600", lineHeight: "26px" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               variant="h6"
               component="h2"
               noWrap
@@ -729,6 +1061,7 @@ export const ProfileItem = (props: Props) => {
           {/* only if has url can it be updated */}
           {hasUrl && (
             <IconButton
+<<<<<<< HEAD
               title={t('shared.actions.refresh')}
               sx={{
                 position: 'absolute',
@@ -736,17 +1069,31 @@ export const ProfileItem = (props: Props) => {
                 top: -1,
                 right: -5,
                 animation: loading ? `1s linear infinite ${round}` : 'none',
+=======
+              title={t("Refresh")}
+              sx={{
+                position: "absolute",
+                p: "3px",
+                top: -1,
+                right: -5,
+                animation: loading ? `1s linear infinite ${round}` : "none",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               }}
               size="small"
               color="inherit"
               disabled={loading}
               onClick={(e) => {
+<<<<<<< HEAD
                 e.stopPropagation()
                 // 如果正在激活或加载中，阻止更新操作
                 if (activating || loading) {
                   return
                 }
                 onUpdate(1)
+=======
+                e.stopPropagation();
+                onUpdate(1);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               }}
             >
               <RefreshRounded color="inherit" />
@@ -761,21 +1108,30 @@ export const ProfileItem = (props: Props) => {
                 <Typography
                   noWrap
                   title={description}
+<<<<<<< HEAD
                   sx={{ fontSize: '14px' }}
+=======
+                  sx={{ fontSize: "14px" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 >
                   {description}
                 </Typography>
               ) : (
                 hasUrl && (
+<<<<<<< HEAD
                   <Typography
                     noWrap
                     title={`${t('shared.labels.from')} ${from}`}
                   >
+=======
+                  <Typography noWrap title={`${t("From")} ${from}`}>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                     {from}
                   </Typography>
                 )
               )}
               {hasUrl && (
+<<<<<<< HEAD
                 <Box
                   sx={{
                     display: 'flex',
@@ -812,6 +1168,17 @@ export const ProfileItem = (props: Props) => {
                         : ''}
                   </Typography>
                 </Box>
+=======
+                <Typography
+                  noWrap
+                  flex="1 0 auto"
+                  fontSize={14}
+                  textAlign="right"
+                  title={`${t("Update Time")}: ${parseExpire(updated)}`}
+                >
+                  {updated > 0 ? dayjs(updated * 1000).fromNow() : ""}
+                </Typography>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               )}
             </>
           }
@@ -819,6 +1186,7 @@ export const ProfileItem = (props: Props) => {
         {/* the third line show extra info or last updated time */}
         {hasExtra ? (
           <Box sx={{ ...boxStyle, fontSize: 14 }}>
+<<<<<<< HEAD
             <span title={t('shared.labels.usedTotal')}>
               {parseTraffic(upload + download)} / {parseTraffic(total)}
             </span>
@@ -829,6 +1197,16 @@ export const ProfileItem = (props: Props) => {
             <span title={t('shared.labels.updateTime')}>
               {parseExpire(updated)}
             </span>
+=======
+            <span title={t("Used / Total")}>
+              {parseTraffic(upload + download)} / {parseTraffic(total)}
+            </span>
+            <span title={t("Expire Time")}>{expire}</span>
+          </Box>
+        ) : (
+          <Box sx={{ ...boxStyle, fontSize: 12, justifyContent: "flex-end" }}>
+            <span title={t("Update Time")}>{parseExpire(updated)}</span>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           </Box>
         )}
         <LinearProgress
@@ -847,8 +1225,13 @@ export const ProfileItem = (props: Props) => {
         transitionDuration={225}
         MenuListProps={{ sx: { py: 0.5 } }}
         onContextMenu={(e) => {
+<<<<<<< HEAD
           setAnchorEl(null)
           e.preventDefault()
+=======
+          setAnchorEl(null);
+          e.preventDefault();
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         }}
       >
         {(hasUrl ? urlModeMenu : fileModeMenu).map((item) => (
@@ -863,10 +1246,17 @@ export const ProfileItem = (props: Props) => {
               (theme) => {
                 return {
                   color:
+<<<<<<< HEAD
                     item.label === menuLabels.delete
                       ? theme.palette.error.main
                       : undefined,
                 }
+=======
+                    item.label === "Delete"
+                      ? theme.palette.error.main
+                      : undefined,
+                };
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               },
             ]}
             dense
@@ -878,6 +1268,7 @@ export const ProfileItem = (props: Props) => {
       {fileOpen && (
         <EditorViewer
           open={true}
+<<<<<<< HEAD
           value={profileDocument.value}
           language="yaml"
           path={`profile:${uid}.yaml`}
@@ -885,15 +1276,31 @@ export const ProfileItem = (props: Props) => {
           dirty={profileDocument.dirty}
           onChange={profileDocument.setValue}
           onSave={handleSaveProfileDocument}
+=======
+          initialData={readProfileFile(uid)}
+          language="yaml"
+          schema="clash"
+          onSave={async (prev, curr) => {
+            await saveProfileFile(uid, curr ?? "");
+            onSave && onSave(prev, curr);
+          }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           onClose={() => setFileOpen(false)}
         />
       )}
       {rulesOpen && (
         <RulesEditorViewer
+<<<<<<< HEAD
           groupsUid={option?.groups ?? ''}
           mergeUid={option?.merge ?? ''}
           profileUid={uid}
           property={option?.rules ?? ''}
+=======
+          groupsUid={option?.groups ?? ""}
+          mergeUid={option?.merge ?? ""}
+          profileUid={uid}
+          property={option?.rules ?? ""}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           open={true}
           onSave={onSave}
           onClose={() => setRulesOpen(false)}
@@ -902,7 +1309,11 @@ export const ProfileItem = (props: Props) => {
       {proxiesOpen && (
         <ProxiesEditorViewer
           profileUid={uid}
+<<<<<<< HEAD
           property={option?.proxies ?? ''}
+=======
+          property={option?.proxies ?? ""}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           open={true}
           onSave={onSave}
           onClose={() => setProxiesOpen(false)}
@@ -910,6 +1321,7 @@ export const ProfileItem = (props: Props) => {
       )}
       {groupsOpen && (
         <GroupsEditorViewer
+<<<<<<< HEAD
           mergeUid={option?.merge ?? ''}
           proxiesUid={option?.proxies ?? ''}
           profileUid={uid}
@@ -918,12 +1330,23 @@ export const ProfileItem = (props: Props) => {
           onSave={onSave}
           onClose={() => {
             setGroupsOpen(false)
+=======
+          mergeUid={option?.merge ?? ""}
+          proxiesUid={option?.proxies ?? ""}
+          profileUid={uid}
+          property={option?.groups ?? ""}
+          open={true}
+          onSave={onSave}
+          onClose={() => {
+            setGroupsOpen(false);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           }}
         />
       )}
       {mergeOpen && (
         <EditorViewer
           open={true}
+<<<<<<< HEAD
           value={mergeDocument.value}
           language="yaml"
           path={`merge:${option?.merge ?? ''}.yaml`}
@@ -931,12 +1354,22 @@ export const ProfileItem = (props: Props) => {
           dirty={mergeDocument.dirty}
           onChange={mergeDocument.setValue}
           onSave={handleSaveMergeDocument}
+=======
+          initialData={readProfileFile(option?.merge ?? "")}
+          language="yaml"
+          schema="clash"
+          onSave={async (prev, curr) => {
+            await saveProfileFile(option?.merge ?? "", curr ?? "");
+            onSave && onSave(prev, curr);
+          }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           onClose={() => setMergeOpen(false)}
         />
       )}
       {scriptOpen && (
         <EditorViewer
           open={true}
+<<<<<<< HEAD
           value={scriptDocument.value}
           language="javascript"
           path={`script:${option?.script ?? ''}.js`}
@@ -944,11 +1377,20 @@ export const ProfileItem = (props: Props) => {
           dirty={scriptDocument.dirty}
           onChange={scriptDocument.setValue}
           onSave={handleSaveScriptDocument}
+=======
+          initialData={readProfileFile(option?.script ?? "")}
+          language="javascript"
+          onSave={async (prev, curr) => {
+            await saveProfileFile(option?.script ?? "", curr ?? "");
+            onSave && onSave(prev, curr);
+          }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           onClose={() => setScriptOpen(false)}
         />
       )}
 
       <ConfirmViewer
+<<<<<<< HEAD
         title={t('profiles.modals.confirmDelete.title')}
         message={t('profiles.modals.confirmDelete.message')}
         open={confirmOpen}
@@ -972,4 +1414,29 @@ function parseUrl(url?: string) {
 function parseExpire(expire?: number) {
   if (!expire) return '-'
   return dayjs(expire * 1000).format('YYYY-MM-DD')
+=======
+        title={t("Confirm deletion")}
+        message={t("This operation is not reversible")}
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          onDelete();
+          setConfirmOpen(false);
+        }}
+      />
+    </Box>
+  );
+};
+
+function parseUrl(url?: string) {
+  if (!url) return "";
+  const regex = /https?:\/\/(.+?)\//;
+  const result = url.match(regex);
+  return result ? result[1] : "local file";
+}
+
+function parseExpire(expire?: number) {
+  if (!expire) return "-";
+  return dayjs(expire * 1000).format("YYYY-MM-DD");
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }

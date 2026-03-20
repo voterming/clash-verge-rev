@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #!/bin/bash
 set -euo pipefail
 
@@ -12,3 +13,6 @@ if ! command -v pnpm >/dev/null 2>&1; then
 fi
 
 cargo make pre-commit
+=======
+pnpm pretty-quick --staged
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { LanOutlined, LanRounded } from '@mui/icons-material'
 import { Box, Button, ButtonGroup } from '@mui/material'
 import { useLockFn } from 'ahooks'
@@ -126,16 +127,63 @@ const ProxyPage = () => {
       onChangeMode('rule')
     }
   }, [normalizedMode, onChangeMode])
+=======
+import useSWR from "swr";
+import { useEffect } from "react";
+import { useLockFn } from "ahooks";
+import { useTranslation } from "react-i18next";
+import { Box, Button, ButtonGroup } from "@mui/material";
+import { closeAllConnections, getClashConfig } from "@/services/api";
+import { patchClashConfig } from "@/services/cmds";
+import { useVerge } from "@/hooks/use-verge";
+import { BasePage } from "@/components/base";
+import { ProxyGroups } from "@/components/proxy/proxy-groups";
+import { ProviderButton } from "@/components/proxy/provider-button";
+
+const ProxyPage = () => {
+  const { t } = useTranslation();
+
+  const { data: clashConfig, mutate: mutateClash } = useSWR(
+    "getClashConfig",
+    getClashConfig,
+  );
+
+  const { verge } = useVerge();
+
+  const modeList = ["rule", "global", "direct"];
+
+  const curMode = clashConfig?.mode?.toLowerCase();
+
+  const onChangeMode = useLockFn(async (mode: string) => {
+    // 断开连接
+    if (mode !== curMode && verge?.auto_close_connection) {
+      closeAllConnections();
+    }
+    await patchClashConfig({ mode });
+    mutateClash();
+  });
+
+  useEffect(() => {
+    if (curMode && !modeList.includes(curMode)) {
+      onChangeMode("rule");
+    }
+  }, [curMode]);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   return (
     <BasePage
       full
+<<<<<<< HEAD
       contentStyle={{ height: '101.5%' }}
       title={
         isChainMode
           ? t('proxies.page.title.chainMode')
           : t('proxies.page.title.default')
       }
+=======
+      contentStyle={{ height: "100%" }}
+      title={t("Proxy Groups")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       header={
         <Box display="flex" alignItems="center" gap={1}>
           <ProviderButton />
@@ -144,6 +192,7 @@ const ProxyPage = () => {
             {modeList.map((mode) => (
               <Button
                 key={mode}
+<<<<<<< HEAD
                 variant={mode === curMode ? 'contained' : 'outlined'}
                 onClick={() => onChangeMode(mode)}
                 sx={{ textTransform: 'capitalize' }}
@@ -181,3 +230,22 @@ const ProxyPage = () => {
 }
 
 export default ProxyPage
+=======
+                variant={mode === curMode ? "contained" : "outlined"}
+                onClick={() => onChangeMode(mode)}
+                sx={{ textTransform: "capitalize" }}
+              >
+                {t(mode)}
+              </Button>
+            ))}
+          </ButtonGroup>
+        </Box>
+      }
+    >
+      <ProxyGroups mode={curMode!} />
+    </BasePage>
+  );
+};
+
+export default ProxyPage;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

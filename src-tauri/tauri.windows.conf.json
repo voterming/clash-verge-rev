@@ -21,6 +21,7 @@
     }
   },
   "app": {
+<<<<<<< HEAD
     "windows": [],
     "security": {
       "capabilities": [
@@ -29,5 +30,13 @@
         "migrated"
       ]
     }
+=======
+    "trayIcon": {
+      "iconPath": "icons/tray-icon.ico",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
+    },
+    "windows": []
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   }
 }

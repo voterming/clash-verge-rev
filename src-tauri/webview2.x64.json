@@ -9,7 +9,11 @@
       "timestampUrl": "",
       "webviewInstallMode": {
         "type": "fixedRuntime",
+<<<<<<< HEAD
         "path": "./Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.x64/"
+=======
+        "path": "./Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.x64/"
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       },
       "nsis": {
         "displayLanguageSelector": true,
@@ -30,5 +34,14 @@
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK"
     }
+<<<<<<< HEAD
+=======
+  },
+  "app": {
+    "trayIcon": {
+      "iconPath": "icons/tray-icon.ico",
+      "iconAsTemplate": true
+    }
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   }
 }

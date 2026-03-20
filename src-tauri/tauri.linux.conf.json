@@ -5,7 +5,11 @@
     "targets": ["deb", "rpm"],
     "linux": {
       "deb": {
+<<<<<<< HEAD
         "depends": ["openssl", "libayatana-appindicator3-1"],
+=======
+        "depends": ["openssl"],
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
@@ -14,7 +18,11 @@
         "preRemoveScript": "./packages/linux/pre-remove.sh"
       },
       "rpm": {
+<<<<<<< HEAD
         "depends": ["openssl", "libayatana-appindicator-gtk3"],
+=======
+        "depends": ["openssl"],
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
@@ -24,11 +32,25 @@
       }
     },
     "externalBin": [
+<<<<<<< HEAD
       "./sidecar/clash-verge-service",
       "./sidecar/clash-verge-service-install",
       "./sidecar/clash-verge-service-uninstall",
       "./sidecar/verge-mihomo",
       "./sidecar/verge-mihomo-alpha"
     ]
+=======
+      "./resources/clash-verge-service",
+      "./resources/install-service",
+      "./resources/uninstall-service",
+      "./sidecar/verge-mihomo",
+      "./sidecar/verge-mihomo-alpha"
+    ]
+  },
+  "app": {
+    "trayIcon": {
+      "iconPath": "icons/tray-icon.ico"
+    }
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   }
 }

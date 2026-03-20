@@ -16,6 +16,7 @@ use std::time::Duration;
 use tokio::sync::oneshot;
 use warp::Filter as _;
 
+<<<<<<< HEAD
 #[derive(serde::Deserialize, Debug)]
 struct QueryParam {
     param: String,
@@ -23,20 +24,40 @@ struct QueryParam {
 
 // 关闭 embedded server 的信号发送端
 static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
+=======
+use super::resolve;
+use crate::config::{Config, IVerge, DEFAULT_PAC};
+use crate::log_err;
+use anyhow::{bail, Result};
+use port_scanner::local_port_available;
+use std::convert::Infallible;
+use warp::Filter;
+
+#[derive(serde::Deserialize, Debug)]
+struct QueryParam {
+    param: String,
+}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
 /// check whether there is already exists
 pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
+<<<<<<< HEAD
     if is_port_in_use(port) {
         let client = ClientBuilder::new().timeout(Duration::from_millis(500)).build()?;
         // 需要确保 Send
         #[allow(clippy::needless_collect)]
         let argvs: Vec<std::string::String> = std::env::args().collect();
+=======
+    if !local_port_available(port) {
+        let argvs: Vec<String> = std::env::args().collect();
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         if argvs.len() > 1 {
             #[cfg(not(target_os = "macos"))]
             {
                 let param = argvs[1].as_str();
                 if param.starts_with("clash:") {
+<<<<<<< HEAD
                     client
                         .get(format!("http://127.0.0.1:{port}/commands/scheme?param={param}"))
                         .send()
@@ -53,11 +74,28 @@ pub async fn check_singleton() -> Result<()> {
         bail!("app exists");
     }
     Ok(())
+=======
+                    let _ = reqwest::get(format!(
+                        "http://127.0.0.1:{port}/commands/scheme?param={param}"
+                    ))
+                    .await;
+                }
+            }
+        } else {
+            let _ = reqwest::get(format!("http://127.0.0.1:{port}/commands/visible")).await;
+        }
+        log::error!("failed to setup singleton listen server");
+        bail!("app exists");
+    } else {
+        Ok(())
+    }
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }
 
 /// The embed server only be used to implement singleton process
 /// maybe it can be used as pac server later
 pub fn embed_server() {
+<<<<<<< HEAD
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     #[allow(clippy::expect_used)]
     SHUTDOWN_SENDER
@@ -135,4 +173,41 @@ pub fn shutdown_embedded_server() {
     {
         sender.send(()).ok();
     }
+=======
+    let port = IVerge::get_singleton_port();
+
+    tauri::async_runtime::spawn(async move {
+        let visible = warp::path!("commands" / "visible").map(move || {
+            resolve::create_window();
+            "ok"
+        });
+
+        let pac = warp::path!("commands" / "pac").map(move || {
+            let content = Config::verge()
+                .latest()
+                .pac_file_content
+                .clone()
+                .unwrap_or(DEFAULT_PAC.to_string());
+            let port = Config::verge()
+                .latest()
+                .verge_mixed_port
+                .unwrap_or(Config::clash().data().get_mixed_port());
+            let content = content.replace("%mixed-port%", &format!("{}", port));
+            warp::http::Response::builder()
+                .header("Content-Type", "application/x-ns-proxy-autoconfig")
+                .body(content)
+                .unwrap_or_default()
+        });
+        async fn scheme_handler(query: QueryParam) -> Result<impl warp::Reply, Infallible> {
+            log_err!(resolve::resolve_scheme(query.param).await);
+            Ok("ok")
+        }
+
+        let scheme = warp::path!("commands" / "scheme")
+            .and(warp::query::<QueryParam>())
+            .and_then(scheme_handler);
+        let commands = visible.or(scheme).or(pac);
+        warp::serve(commands).run(([127, 0, 0, 1], port)).await;
+    });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }

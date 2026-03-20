@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use crate::core::{CoreManager, handle, manager::RunningMode};
 use anyhow::Result;
 use async_trait::async_trait;
@@ -7,6 +8,14 @@ use once_cell::sync::OnceCell;
 use std::iter;
 use std::{fs, path::PathBuf};
 use tauri::Manager as _;
+=======
+use crate::core::handle;
+use anyhow::Result;
+use once_cell::sync::OnceCell;
+use std::fs;
+use std::path::PathBuf;
+use tauri::Manager;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
 #[cfg(not(feature = "verge-dev"))]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
@@ -50,17 +59,28 @@ pub fn app_home_dir() -> Result<PathBuf> {
         let app_exe = dunce::canonicalize(app_exe)?;
         let app_dir = app_exe
             .parent()
+<<<<<<< HEAD
             .ok_or_else(|| anyhow::anyhow!("failed to get the portable app dir"))?;
         return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
     }
 
     // 避免在Handle未初始化时崩溃
     let app_handle = handle::Handle::app_handle();
+=======
+            .ok_or(anyhow::anyhow!("failed to get the portable app dir"))?;
+        return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
+    }
+    let app_handle = handle::Handle::global().app_handle().unwrap();
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
     match app_handle.path().data_dir() {
         Ok(dir) => Ok(dir.join(APP_ID)),
         Err(e) => {
+<<<<<<< HEAD
             logging!(error, Type::File, "Failed to get the app home directory: {e}");
+=======
+            log::error!(target:"app", "Failed to get the app home directory: {}", e);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             Err(anyhow::anyhow!("Failed to get the app homedirectory"))
         }
     }
@@ -68,6 +88,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
 
 /// get the resources dir
 pub fn app_resources_dir() -> Result<PathBuf> {
+<<<<<<< HEAD
     // 避免在Handle未初始化时崩溃
     let app_handle = handle::Handle::app_handle();
 
@@ -75,6 +96,13 @@ pub fn app_resources_dir() -> Result<PathBuf> {
         Ok(dir) => Ok(dir.join("resources")),
         Err(e) => {
             logging!(error, Type::File, "Failed to get the resource directory: {e}");
+=======
+    let app_handle = handle::Handle::global().app_handle().unwrap();
+    match app_handle.path().resource_dir() {
+        Ok(dir) => Ok(dir.join("resources")),
+        Err(e) => {
+            log::error!(target:"app", "Failed to get the resource directory: {}", e);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             Err(anyhow::anyhow!("Failed to get the resource directory"))
         }
     }
@@ -85,6 +113,7 @@ pub fn app_profiles_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("profiles"))
 }
 
+<<<<<<< HEAD
 /// icons dir
 pub fn app_icons_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("icons"))
@@ -109,11 +138,14 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
     icon_path.map(|path| path_to_str(&path).map(|s| s.into())).transpose()
 }
 
+=======
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 /// logs dir
 pub fn app_logs_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
 }
 
+<<<<<<< HEAD
 // latest verge log
 pub fn app_latest_log() -> Result<PathBuf> {
     Ok(app_logs_dir()?.join("latest.log"))
@@ -126,6 +158,8 @@ pub fn local_backup_dir() -> Result<PathBuf> {
     Ok(dir)
 }
 
+=======
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 pub fn clash_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(CLASH_CONFIG))
 }
@@ -140,12 +174,17 @@ pub fn profiles_path() -> Result<PathBuf> {
 
 #[cfg(target_os = "macos")]
 pub fn service_path() -> Result<PathBuf> {
+<<<<<<< HEAD
     let res_dir = app_resources_dir()?;
     Ok(res_dir.join("clash-verge-service"))
+=======
+    Ok(app_resources_dir()?.join("clash-verge-service"))
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }
 
 #[cfg(windows)]
 pub fn service_path() -> Result<PathBuf> {
+<<<<<<< HEAD
     let res_dir = app_resources_dir()?;
     Ok(res_dir.join("clash-verge-service.exe"))
 }
@@ -169,13 +208,34 @@ pub fn clash_latest_log() -> Result<PathBuf> {
         RunningMode::Service => Ok(service_log_dir()?.join("service_latest.log")),
         RunningMode::Sidecar | RunningMode::NotRunning => Ok(sidecar_log_dir()?.join("sidecar_latest.log")),
     }
+=======
+    Ok(app_resources_dir()?.join("clash-verge-service.exe"))
+}
+
+pub fn service_log_file() -> Result<PathBuf> {
+    use chrono::Local;
+
+    let log_dir = app_logs_dir()?.join("service");
+
+    let local_time = Local::now().format("%Y-%m-%d-%H%M").to_string();
+    let log_file = format!("{}.log", local_time);
+    let log_file = log_dir.join(log_file);
+
+    let _ = std::fs::create_dir_all(&log_dir);
+
+    Ok(log_file)
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }
 
 pub fn path_to_str(path: &PathBuf) -> Result<&str> {
     let path_str = path
         .as_os_str()
         .to_str()
+<<<<<<< HEAD
         .ok_or_else(|| anyhow::anyhow!("failed to get path from {:?}", path))?;
+=======
+        .ok_or(anyhow::anyhow!("failed to get path from {:?}", path))?;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     Ok(path_str)
 }
 
@@ -189,6 +249,7 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
     } else {
         // Generate and save new key
         let mut key = vec![0u8; 32];
+<<<<<<< HEAD
         getrandom::fill(&mut key)?;
 
         // Ensure directory exists
@@ -249,4 +310,18 @@ impl PathBufExec for PathBuf {
         }
         Ok(())
     }
+=======
+        getrandom::getrandom(&mut key)?;
+
+        // Ensure directory exists
+        if let Some(parent) = key_path.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| anyhow::anyhow!("Failed to create key directory: {}", e))?;
+        }
+        // Save key
+        fs::write(&key_path, &key)
+            .map_err(|e| anyhow::anyhow!("Failed to save encryption key: {}", e))?;
+        Ok(key)
+    }
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }

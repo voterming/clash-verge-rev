@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { LanRounded, SettingsRounded } from '@mui/icons-material'
 import { MenuItem, Select, TextField, Typography } from '@mui/material'
 import { invoke } from '@tauri-apps/api/core'
@@ -95,11 +96,82 @@ const SettingClash = ({ onError }: Props) => {
 
   return (
     <SettingList title={t('settings.sections.clash.title')}>
+=======
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { TextField, Select, MenuItem, Typography } from "@mui/material";
+import {
+  SettingsRounded,
+  ShuffleRounded,
+  LanRounded,
+} from "@mui/icons-material";
+import { DialogRef, Notice, Switch } from "@/components/base";
+import { useClash } from "@/hooks/use-clash";
+import { GuardState } from "./mods/guard-state";
+import { WebUIViewer } from "./mods/web-ui-viewer";
+import { ClashPortViewer } from "./mods/clash-port-viewer";
+import { ControllerViewer } from "./mods/controller-viewer";
+import { SettingList, SettingItem } from "./mods/setting-comp";
+import { ClashCoreViewer } from "./mods/clash-core-viewer";
+import { invoke_uwp_tool } from "@/services/cmds";
+import getSystem from "@/utils/get-system";
+import { useVerge } from "@/hooks/use-verge";
+import { updateGeoData } from "@/services/api";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
+
+const isWIN = getSystem() === "windows";
+
+interface Props {
+  onError: (err: Error) => void;
+}
+
+const SettingClash = ({ onError }: Props) => {
+  const { t } = useTranslation();
+
+  const { clash, version, mutateClash, patchClash } = useClash();
+  const { verge, mutateVerge, patchVerge } = useVerge();
+
+  const {
+    ipv6,
+    "allow-lan": allowLan,
+    "log-level": logLevel,
+    "unified-delay": unifiedDelay,
+  } = clash ?? {};
+
+  const { enable_random_port = false, verge_mixed_port } = verge ?? {};
+
+  const webRef = useRef<DialogRef>(null);
+  const portRef = useRef<DialogRef>(null);
+  const ctrlRef = useRef<DialogRef>(null);
+  const coreRef = useRef<DialogRef>(null);
+  const networkRef = useRef<DialogRef>(null);
+
+  const onSwitchFormat = (_e: any, value: boolean) => value;
+  const onChangeData = (patch: Partial<IConfigData>) => {
+    mutateClash((old) => ({ ...(old! || {}), ...patch }), false);
+  };
+  const onChangeVerge = (patch: Partial<IVergeConfig>) => {
+    mutateVerge({ ...verge, ...patch }, false);
+  };
+  const onUpdateGeo = async () => {
+    try {
+      await updateGeoData();
+      Notice.success(t("GeoData Updated"));
+    } catch (err: any) {
+      Notice.error(err?.response.data.message || err.toString());
+    }
+  };
+
+  return (
+    <SettingList title={t("Clash Setting")}>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       <WebUIViewer ref={webRef} />
       <ClashPortViewer ref={portRef} />
       <ControllerViewer ref={ctrlRef} />
       <ClashCoreViewer ref={coreRef} />
       <NetworkInterfaceViewer ref={networkRef} />
+<<<<<<< HEAD
       <DnsViewer ref={dnsRef} />
       <HeaderConfiguration ref={corsRef} />
       <TunnelsViewer ref={tunnelRef} />
@@ -112,6 +184,18 @@ const SettingClash = ({ onError }: Props) => {
             icon={LanRounded}
             onClick={() => {
               networkRef.current?.open()
+=======
+
+      <SettingItem
+        label={t("Allow Lan")}
+        extra={
+          <TooltipIcon
+            title={t("Network Interface")}
+            color={"inherit"}
+            icon={LanRounded}
+            onClick={() => {
+              networkRef.current?.open();
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             }}
           />
         }
@@ -121,13 +205,19 @@ const SettingClash = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
+<<<<<<< HEAD
           onChange={(e) => onChangeData({ 'allow-lan': e })}
           onGuard={(e) => patchClash({ 'allow-lan': e })}
+=======
+          onChange={(e) => onChangeData({ "allow-lan": e })}
+          onGuard={(e) => patchClash({ "allow-lan": e })}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         >
           <Switch edge="end" />
         </GuardState>
       </SettingItem>
 
+<<<<<<< HEAD
       <SettingItem
         label={t('settings.sections.clash.form.fields.dnsOverwrite')}
         extra={
@@ -145,6 +235,9 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem label={t('settings.sections.clash.form.fields.ipv6')}>
+=======
+      <SettingItem label={t("IPv6")}>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         <GuardState
           value={ipv6 ?? false}
           valueProps="checked"
@@ -158,11 +251,19 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
+<<<<<<< HEAD
         label={t('settings.sections.clash.form.fields.unifiedDelay')}
         extra={
           <TooltipIcon
             title={t('settings.sections.clash.form.tooltips.unifiedDelay')}
             sx={{ opacity: '0.7' }}
+=======
+        label={t("Unified Delay")}
+        extra={
+          <TooltipIcon
+            title={t("Unified Delay Info")}
+            sx={{ opacity: "0.7" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           />
         }
       >
@@ -171,14 +272,20 @@ const SettingClash = ({ onError }: Props) => {
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
+<<<<<<< HEAD
           onChange={(e) => onChangeData({ 'unified-delay': e })}
           onGuard={(e) => patchClash({ 'unified-delay': e })}
+=======
+          onChange={(e) => onChangeData({ "unified-delay": e })}
+          onGuard={(e) => patchClash({ "unified-delay": e })}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         >
           <Switch edge="end" />
         </GuardState>
       </SettingItem>
 
       <SettingItem
+<<<<<<< HEAD
         label={t('settings.sections.clash.form.fields.logLevel')}
         extra={
           <TooltipIcon
@@ -213,10 +320,32 @@ const SettingClash = ({ onError }: Props) => {
             <MenuItem value="silent">
               {t('settings.sections.clash.form.options.logLevel.silent')}
             </MenuItem>
+=======
+        label={t("Log Level")}
+        extra={
+          <TooltipIcon title={t("Log Level Info")} sx={{ opacity: "0.7" }} />
+        }
+      >
+        <GuardState
+          // clash premium 2022.08.26 值为warn
+          value={logLevel === "warn" ? "warning" : (logLevel ?? "info")}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) => onChangeData({ "log-level": e })}
+          onGuard={(e) => patchClash({ "log-level": e })}
+        >
+          <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
+            <MenuItem value="debug">Debug</MenuItem>
+            <MenuItem value="info">Info</MenuItem>
+            <MenuItem value="warning">Warn</MenuItem>
+            <MenuItem value="error">Error</MenuItem>
+            <MenuItem value="silent">Silent</MenuItem>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           </Select>
         </GuardState>
       </SettingItem>
 
+<<<<<<< HEAD
       <SettingItem label={t('settings.sections.clash.form.fields.portConfig')}>
         <TextField
           autoComplete="new-password"
@@ -227,11 +356,41 @@ const SettingClash = ({ onError }: Props) => {
           onClick={(e) => {
             portRef.current?.open()
             ;(e.target as any).blur()
+=======
+      <SettingItem
+        label={t("Port Config")}
+        extra={
+          <TooltipIcon
+            title={t("Random Port")}
+            color={enable_random_port ? "primary" : "inherit"}
+            icon={ShuffleRounded}
+            onClick={() => {
+              Notice.success(
+                t("Restart Application to Apply Modifications"),
+                1000,
+              );
+              onChangeVerge({ enable_random_port: !enable_random_port });
+              patchVerge({ enable_random_port: !enable_random_port });
+            }}
+          />
+        }
+      >
+        <TextField
+          autoComplete="new-password"
+          disabled={enable_random_port}
+          size="small"
+          value={verge_mixed_port ?? 7897}
+          sx={{ width: 100, input: { py: "7.5px", cursor: "pointer" } }}
+          onClick={(e) => {
+            portRef.current?.open();
+            (e.target as any).blur();
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           }}
         />
       </SettingItem>
 
       <SettingItem
+<<<<<<< HEAD
         label={t('settings.sections.clash.form.fields.external')}
         extra={
           <TooltipIcon
@@ -255,6 +414,16 @@ const SettingClash = ({ onError }: Props) => {
 
       <SettingItem
         label={t('settings.sections.clash.form.fields.clashCore')}
+=======
+        onClick={() => ctrlRef.current?.open()}
+        label={t("External")}
+      />
+
+      <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
+
+      <SettingItem
+        label={t("Clash Core")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         extra={
           <TooltipIcon
             icon={SettingsRounded}
@@ -262,22 +431,35 @@ const SettingClash = ({ onError }: Props) => {
           />
         }
       >
+<<<<<<< HEAD
         <Typography sx={{ py: '7px', pr: 1 }}>{version}</Typography>
+=======
+        <Typography sx={{ py: "7px", pr: 1 }}>{version}</Typography>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       </SettingItem>
 
       {isWIN && (
         <SettingItem
           onClick={invoke_uwp_tool}
+<<<<<<< HEAD
           label={t('settings.sections.clash.form.fields.openUwpTool')}
           extra={
             <TooltipIcon
               title={t('settings.sections.clash.form.tooltips.openUwpTool')}
               sx={{ opacity: '0.7' }}
+=======
+          label={t("Open UWP tool")}
+          extra={
+            <TooltipIcon
+              title={t("Open UWP tool Info")}
+              sx={{ opacity: "0.7" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             />
           }
         />
       )}
 
+<<<<<<< HEAD
       <SettingItem
         onClick={onUpdateGeo}
         label={t('settings.sections.clash.form.fields.updateGeoData')}
@@ -292,3 +474,11 @@ const SettingClash = ({ onError }: Props) => {
 }
 
 export default SettingClash
+=======
+      <SettingItem onClick={onUpdateGeo} label={t("Update GeoData")} />
+    </SettingList>
+  );
+};
+
+export default SettingClash;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

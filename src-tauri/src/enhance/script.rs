@@ -1,5 +1,6 @@
 use super::use_lowercase;
 use anyhow::{Error, Result};
+<<<<<<< HEAD
 use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
 use clash_verge_logging::{Type, logging_error};
 use parking_lot::Mutex;
@@ -92,10 +93,64 @@ pub fn use_script(script: String, config: &Mapping, name: &String) -> Result<(Ma
       }}"
     );
 
+=======
+use serde_yaml::Mapping;
+
+pub fn use_script(
+    script: String,
+    config: Mapping,
+    name: String,
+) -> Result<(Mapping, Vec<(String, String)>)> {
+    use boa_engine::{native_function::NativeFunction, Context, JsValue, Source};
+    use std::sync::{Arc, Mutex};
+    let mut context = Context::default();
+
+    let outputs = Arc::new(Mutex::new(vec![]));
+
+    let copy_outputs = outputs.clone();
+    unsafe {
+        let _ = context.register_global_builtin_callable(
+            "__verge_log__".into(),
+            2,
+            NativeFunction::from_closure(
+                move |_: &JsValue, args: &[JsValue], context: &mut Context| {
+                    let level = args.first().unwrap().to_string(context)?;
+                    let level = level.to_std_string().unwrap();
+                    let data = args.get(1).unwrap().to_string(context)?;
+                    let data = data.to_std_string().unwrap();
+                    let mut out = copy_outputs.lock().unwrap();
+                    out.push((level, data));
+                    Ok(JsValue::undefined())
+                },
+            ),
+        );
+    }
+    let _ = context.eval(Source::from_bytes(
+        r#"var console = Object.freeze({
+        log(data){__verge_log__("log",JSON.stringify(data))}, 
+        info(data){__verge_log__("info",JSON.stringify(data))}, 
+        error(data){__verge_log__("error",JSON.stringify(data))},
+        debug(data){__verge_log__("debug",JSON.stringify(data))},
+      });"#,
+    ));
+
+    let config = use_lowercase(config.clone());
+    let config_str = serde_json::to_string(&config)?;
+
+    let code = format!(
+        r#"try{{
+        {script};
+        JSON.stringify(main({config_str},'{name}')||'')
+      }} catch(err) {{
+        `__error_flag__ ${{err.toString()}}`
+      }}"#
+    );
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     if let Ok(result) = context.eval(Source::from_bytes(code.as_str())) {
         if !result.is_string() {
             anyhow::bail!("main function should return object");
         }
+<<<<<<< HEAD
         let result = result
             .to_string(&mut context)
             .map_err(|e| anyhow::anyhow!("Failed to convert JS result to string: {}", e))?;
@@ -117,6 +172,23 @@ pub fn use_script(script: String, config: &Mapping, name: &String) -> Result<(Ma
                     .push(("exception".into(), "Script execution failed".into()));
                 logging_error!(Type::Config, "Script execution error: {}. Script name: {}", err, name);
                 Ok((config, outputs.lock().to_vec()))
+=======
+        let result = result.to_string(&mut context).unwrap();
+        let result = result.to_std_string().unwrap();
+        if result.starts_with("__error_flag__") {
+            anyhow::bail!(result[15..].to_owned());
+        }
+        if result == "\"\"" {
+            anyhow::bail!("main function should return object");
+        }
+        let res: Result<Mapping, Error> = Ok(serde_json::from_str::<Mapping>(result.as_str())?);
+        let mut out = outputs.lock().unwrap();
+        match res {
+            Ok(config) => Ok((use_lowercase(config), out.to_vec())),
+            Err(err) => {
+                out.push(("exception".into(), err.to_string()));
+                Ok((config, out.to_vec()))
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             }
         }
     } else {
@@ -124,6 +196,7 @@ pub fn use_script(script: String, config: &Mapping, name: &String) -> Result<(Ma
     }
 }
 
+<<<<<<< HEAD
 fn parse_json_safely(json_str: &str) -> Result<Mapping, Error> {
     if json_str.len() > MAX_JSON_SIZE {
         anyhow::bail!("JSON string too large");
@@ -165,6 +238,9 @@ fn escape_js_string_for_single_quote(s: &str) -> String {
 #[test]
 #[allow(unused_variables)]
 #[allow(clippy::expect_used)]
+=======
+#[test]
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 fn test_script() {
     let script = r#"
     function main(config) {
@@ -177,7 +253,11 @@ fn test_script() {
     }
   "#;
 
+<<<<<<< HEAD
     let config = r"
+=======
+    let config = r#"
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     rules:
       - 111
       - 222
@@ -185,6 +265,7 @@ fn test_script() {
       enable: false
     dns:
       enable: false
+<<<<<<< HEAD
   ";
 
     let config = &serde_yaml_ng::from_str(config).expect("Failed to parse test config YAML");
@@ -246,4 +327,14 @@ fn test_memory_limits() {
     let result = use_script(script.into(), config, &String::from(""));
     // 应该失败或被限制
     assert!(result.is_ok()); // 会被限制但不会 panic
+=======
+  "#;
+
+    let config = serde_yaml::from_str(config).unwrap();
+    let (config, results) = use_script(script.into(), config, "".to_string()).unwrap();
+
+    let _ = serde_yaml::to_string(&config).unwrap();
+
+    dbg!(results);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }

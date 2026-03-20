@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   DndContext,
   DragEndEvent,
@@ -13,6 +14,25 @@ import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
 } from '@mui/icons-material'
+=======
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import { useLockFn } from "ahooks";
+import yaml from "js-yaml";
+import { useTranslation } from "react-i18next";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 import {
   Box,
   Button,
@@ -24,6 +44,7 @@ import {
   ListItem,
   TextField,
   styled,
+<<<<<<< HEAD
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
@@ -281,17 +302,225 @@ export const ProxiesEditorViewer = (props: Props) => {
         {
           <Box display="flex" justifyContent="space-between">
             {t('profiles.modals.proxiesEditor.title')}
+=======
+} from "@mui/material";
+import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
+import { ProxyItem } from "@/components/profile/proxy-item";
+import { readProfileFile, saveProfileFile } from "@/services/cmds";
+import { Notice } from "@/components/base";
+import getSystem from "@/utils/get-system";
+import { BaseSearchBox } from "../base/base-search-box";
+import { Virtuoso } from "react-virtuoso";
+import MonacoEditor from "react-monaco-editor";
+import { useThemeMode } from "@/services/states";
+import parseUri from "@/utils/uri-parser";
+
+interface Props {
+  profileUid: string;
+  property: string;
+  open: boolean;
+  onClose: () => void;
+  onSave?: (prev?: string, curr?: string) => void;
+}
+
+export const ProxiesEditorViewer = (props: Props) => {
+  const { profileUid, property, open, onClose, onSave } = props;
+  const { t } = useTranslation();
+  const themeMode = useThemeMode();
+  const [prevData, setPrevData] = useState("");
+  const [currData, setCurrData] = useState("");
+  const [visualization, setVisualization] = useState(true);
+  const [match, setMatch] = useState(() => (_: string) => true);
+  const [proxyUri, setProxyUri] = useState<string>("");
+
+  const [proxyList, setProxyList] = useState<IProxyConfig[]>([]);
+  const [prependSeq, setPrependSeq] = useState<IProxyConfig[]>([]);
+  const [appendSeq, setAppendSeq] = useState<IProxyConfig[]>([]);
+  const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
+
+  const filteredPrependSeq = useMemo(
+    () => prependSeq.filter((proxy) => match(proxy.name)),
+    [prependSeq, match]
+  );
+  const filteredProxyList = useMemo(
+    () => proxyList.filter((proxy) => match(proxy.name)),
+    [proxyList, match]
+  );
+  const filteredAppendSeq = useMemo(
+    () => appendSeq.filter((proxy) => match(proxy.name)),
+    [appendSeq, match]
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  const reorder = (
+    list: IProxyConfig[],
+    startIndex: number,
+    endIndex: number
+  ) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    return result;
+  };
+  const onPrependDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over) {
+      if (active.id !== over.id) {
+        let activeIndex = 0;
+        let overIndex = 0;
+        prependSeq.forEach((item, index) => {
+          if (item.name === active.id) {
+            activeIndex = index;
+          }
+          if (item.name === over.id) {
+            overIndex = index;
+          }
+        });
+
+        setPrependSeq(reorder(prependSeq, activeIndex, overIndex));
+      }
+    }
+  };
+  const onAppendDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over) {
+      if (active.id !== over.id) {
+        let activeIndex = 0;
+        let overIndex = 0;
+        appendSeq.forEach((item, index) => {
+          if (item.name === active.id) {
+            activeIndex = index;
+          }
+          if (item.name === over.id) {
+            overIndex = index;
+          }
+        });
+        setAppendSeq(reorder(appendSeq, activeIndex, overIndex));
+      }
+    }
+  };
+  const handleParse = () => {
+    let proxies = [] as IProxyConfig[];
+    let names: string[] = [];
+    let uris = "";
+    try {
+      uris = atob(proxyUri);
+    } catch {
+      uris = proxyUri;
+    }
+    uris
+      .trim()
+      .split("\n")
+      .forEach((uri) => {
+        try {
+          let proxy = parseUri(uri.trim());
+          if (!names.includes(proxy.name)) {
+            proxies.push(proxy);
+            names.push(proxy.name);
+          }
+        } catch (err: any) {
+          Notice.error(err.message || err.toString());
+        }
+      });
+    return proxies;
+  };
+  const fetchProfile = async () => {
+    let data = await readProfileFile(profileUid);
+
+    let originProxiesObj = yaml.load(data) as {
+      proxies: IProxyConfig[];
+    } | null;
+
+    setProxyList(originProxiesObj?.proxies || []);
+  };
+
+  const fetchContent = async () => {
+    let data = await readProfileFile(property);
+    let obj = yaml.load(data) as ISeqProfileConfig | null;
+
+    setPrependSeq(obj?.prepend || []);
+    setAppendSeq(obj?.append || []);
+    setDeleteSeq(obj?.delete || []);
+
+    setPrevData(data);
+    setCurrData(data);
+  };
+
+  useEffect(() => {
+    if (currData === "") return;
+    if (visualization !== true) return;
+
+    let obj = yaml.load(currData) as {
+      prepend: [];
+      append: [];
+      delete: [];
+    } | null;
+    setPrependSeq(obj?.prepend || []);
+    setAppendSeq(obj?.append || []);
+    setDeleteSeq(obj?.delete || []);
+  }, [visualization]);
+
+  useEffect(() => {
+    if (prependSeq && appendSeq && deleteSeq)
+      setCurrData(
+        yaml.dump(
+          { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
+          {
+            forceQuotes: true,
+          }
+        )
+      );
+  }, [prependSeq, appendSeq, deleteSeq]);
+
+  useEffect(() => {
+    if (!open) return;
+    fetchContent();
+    fetchProfile();
+  }, [open]);
+
+  const handleSave = useLockFn(async () => {
+    try {
+      await saveProfileFile(property, currData);
+      onSave?.(prevData, currData);
+      onClose();
+    } catch (err: any) {
+      Notice.error(err.message || err.toString());
+    }
+  });
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
+      <DialogTitle>
+        {
+          <Box display="flex" justifyContent="space-between">
+            {t("Edit Proxies")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             <Box>
               <Button
                 variant="contained"
                 size="small"
                 onClick={() => {
+<<<<<<< HEAD
                   setVisualization((prev) => !prev)
                 }}
               >
                 {visualization
                   ? t('shared.editorModes.advanced')
                   : t('shared.editorModes.visualization')}
+=======
+                  setVisualization((prev) => !prev);
+                }}
+              >
+                {visualization ? t("Advanced") : t("Visualization")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               </Button>
             </Box>
           </Box>
@@ -299,28 +528,46 @@ export const ProxiesEditorViewer = (props: Props) => {
       </DialogTitle>
 
       <DialogContent
+<<<<<<< HEAD
         sx={{ display: 'flex', width: 'auto', height: 'calc(100vh - 185px)' }}
+=======
+        sx={{ display: "flex", width: "auto", height: "calc(100vh - 185px)" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       >
         {visualization ? (
           <>
             <List
               sx={{
+<<<<<<< HEAD
                 width: '50%',
                 padding: '0 10px',
+=======
+                width: "50%",
+                padding: "0 10px",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               }}
             >
               <Box
                 sx={{
+<<<<<<< HEAD
                   height: 'calc(100% - 80px)',
                   overflowY: 'auto',
+=======
+                  height: "calc(100% - 80px)",
+                  overflowY: "auto",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 }}
               >
                 <Item>
                   <TextField
                     autoComplete="new-password"
+<<<<<<< HEAD
                     placeholder={t(
                       'profiles.modals.proxiesEditor.placeholders.multiUri',
                     )}
+=======
+                    placeholder={t("Use newlines for multiple uri")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                     fullWidth
                     rows={9}
                     multiline
@@ -335,12 +582,20 @@ export const ProxiesEditorViewer = (props: Props) => {
                   variant="contained"
                   startIcon={<VerticalAlignTopRounded />}
                   onClick={() => {
+<<<<<<< HEAD
                     handleParseAsync((proxies) => {
                       setPrependSeq((prev) => [...proxies, ...prev])
                     })
                   }}
                 >
                   {t('profiles.modals.proxiesEditor.actions.prepend')}
+=======
+                    let proxies = handleParse();
+                    setPrependSeq([...proxies, ...prependSeq]);
+                  }}
+                >
+                  {t("Prepend Proxy")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 </Button>
               </Item>
               <Item>
@@ -349,25 +604,42 @@ export const ProxiesEditorViewer = (props: Props) => {
                   variant="contained"
                   startIcon={<VerticalAlignBottomRounded />}
                   onClick={() => {
+<<<<<<< HEAD
                     handleParseAsync((proxies) => {
                       setAppendSeq((prev) => [...prev, ...proxies])
                     })
                   }}
                 >
                   {t('profiles.modals.proxiesEditor.actions.append')}
+=======
+                    let proxies = handleParse();
+                    setAppendSeq([...appendSeq, ...proxies]);
+                  }}
+                >
+                  {t("Append Proxy")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 </Button>
               </Item>
             </List>
 
             <List
               sx={{
+<<<<<<< HEAD
                 width: '50%',
                 padding: '0 10px',
+=======
+                width: "50%",
+                padding: "0 10px",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
               <Virtuoso
+<<<<<<< HEAD
                 style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
+=======
+                style={{ height: "calc(100% - 24px)", marginTop: "8px" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 totalCount={
                   filteredProxyList.length +
                   (filteredPrependSeq.length > 0 ? 1 : 0) +
@@ -375,7 +647,11 @@ export const ProxiesEditorViewer = (props: Props) => {
                 }
                 increaseViewportBy={256}
                 itemContent={(index) => {
+<<<<<<< HEAD
                   const shift = filteredPrependSeq.length > 0 ? 1 : 0
+=======
+                  let shift = filteredPrependSeq.length > 0 ? 1 : 0;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   if (filteredPrependSeq.length > 0 && index === 0) {
                     return (
                       <DndContext
@@ -385,6 +661,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                       >
                         <SortableContext
                           items={filteredPrependSeq.map((x) => {
+<<<<<<< HEAD
                             return x.name
                           })}
                         >
@@ -392,11 +669,21 @@ export const ProxiesEditorViewer = (props: Props) => {
                             return (
                               <ProxyItem
                                 key={item.name}
+=======
+                            return x.name;
+                          })}
+                        >
+                          {filteredPrependSeq.map((item, index) => {
+                            return (
+                              <ProxyItem
+                                key={`${item.name}-${index}`}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                                 type="prepend"
                                 proxy={item}
                                 onDelete={() => {
                                   setPrependSeq(
                                     prependSeq.filter(
+<<<<<<< HEAD
                                       (v) => v.name !== item.name,
                                     ),
                                   )
@@ -416,6 +703,27 @@ export const ProxiesEditorViewer = (props: Props) => {
                           deleteSeq.includes(filteredProxyList[newIndex].name)
                             ? 'delete'
                             : 'original'
+=======
+                                      (v) => v.name !== item.name
+                                    )
+                                  );
+                                }}
+                              />
+                            );
+                          })}
+                        </SortableContext>
+                      </DndContext>
+                    );
+                  } else if (index < filteredProxyList.length + shift) {
+                    let newIndex = index - shift;
+                    return (
+                      <ProxyItem
+                        key={`${filteredProxyList[newIndex].name}-${index}`}
+                        type={
+                          deleteSeq.includes(filteredProxyList[newIndex].name)
+                            ? "delete"
+                            : "original"
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }
                         proxy={filteredProxyList[newIndex]}
                         onDelete={() => {
@@ -424,18 +732,32 @@ export const ProxiesEditorViewer = (props: Props) => {
                           ) {
                             setDeleteSeq(
                               deleteSeq.filter(
+<<<<<<< HEAD
                                 (v) => v !== filteredProxyList[newIndex].name,
                               ),
                             )
+=======
+                                (v) => v !== filteredProxyList[newIndex].name
+                              )
+                            );
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                           } else {
                             setDeleteSeq((prev) => [
                               ...prev,
                               filteredProxyList[newIndex].name,
+<<<<<<< HEAD
                             ])
                           }
                         }}
                       />
                     )
+=======
+                            ]);
+                          }
+                        }}
+                      />
+                    );
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   } else {
                     return (
                       <DndContext
@@ -445,6 +767,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                       >
                         <SortableContext
                           items={filteredAppendSeq.map((x) => {
+<<<<<<< HEAD
                             return x.name
                           })}
                         >
@@ -452,11 +775,21 @@ export const ProxiesEditorViewer = (props: Props) => {
                             return (
                               <ProxyItem
                                 key={item.name}
+=======
+                            return x.name;
+                          })}
+                        >
+                          {filteredAppendSeq.map((item, index) => {
+                            return (
+                              <ProxyItem
+                                key={`${item.name}-${index}`}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                                 type="append"
                                 proxy={item}
                                 onDelete={() => {
                                   setAppendSeq(
                                     appendSeq.filter(
+<<<<<<< HEAD
                                       (v) => v.name !== item.name,
                                     ),
                                   )
@@ -467,6 +800,18 @@ export const ProxiesEditorViewer = (props: Props) => {
                         </SortableContext>
                       </DndContext>
                     )
+=======
+                                      (v) => v.name !== item.name
+                                    )
+                                  );
+                                }}
+                              />
+                            );
+                          })}
+                        </SortableContext>
+                      </DndContext>
+                    );
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   }
                 }}
               />
@@ -477,7 +822,11 @@ export const ProxiesEditorViewer = (props: Props) => {
             height="100%"
             language="yaml"
             value={currData}
+<<<<<<< HEAD
             theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+=======
+            theme={themeMode === "light" ? "vs" : "vs-dark"}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             options={{
               tabSize: 2, // 根据语言类型设置缩进大小
               minimap: {
@@ -493,18 +842,28 @@ export const ProxiesEditorViewer = (props: Props) => {
                 top: 33, // 顶部padding防止遮挡snippets
               },
               fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
+<<<<<<< HEAD
                 getSystem() === 'windows' ? ', twemoji mozilla' : ''
               }`,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}
             onChange={(value) => setCurrData(value ?? '')}
+=======
+                getSystem() === "windows" ? ", twemoji mozilla" : ""
+              }`,
+              fontLigatures: true, // 连字符
+              smoothScrolling: true, // 平滑滚动
+            }}
+            onChange={(value) => setCurrData(value)}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           />
         )}
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
+<<<<<<< HEAD
           {t('shared.actions.cancel')}
         </Button>
 
@@ -519,3 +878,19 @@ export const ProxiesEditorViewer = (props: Props) => {
 const Item = styled(ListItem)(() => ({
   padding: '5px 2px',
 }))
+=======
+          {t("Cancel")}
+        </Button>
+
+        <Button onClick={handleSave} variant="contained">
+          {t("Save")}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const Item = styled(ListItem)(() => ({
+  padding: "5px 2px",
+}));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

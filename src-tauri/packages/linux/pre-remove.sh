@@ -1,4 +1,5 @@
 #!/bin/bash
+<<<<<<< HEAD
 /usr/bin/clash-verge-service-uninstall
 
 . /etc/os-release
@@ -10,3 +11,6 @@ if [ "$ID" = "deepin" ]; then
     fi
 fi
 
+=======
+/usr/bin/uninstall-service
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   Box,
   Button,
@@ -93,12 +94,75 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
       setTunIcon(tun_icon_ico)
     } else {
       setTunIcon(tun_icon_png)
+=======
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  List,
+  Button,
+  Select,
+  MenuItem,
+  styled,
+  ListItem,
+  ListItemText,
+  Box,
+} from "@mui/material";
+import { useVerge } from "@/hooks/use-verge";
+import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { GuardState } from "./guard-state";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { copyIconFile, getAppDir } from "@/services/cmds";
+import { join } from "@tauri-apps/api/path";
+import { exists } from "@tauri-apps/plugin-fs";
+import getSystem from "@/utils/get-system";
+
+const OS = getSystem();
+
+export const LayoutViewer = forwardRef<DialogRef>((props, ref) => {
+  const { t } = useTranslation();
+  const { verge, patchVerge, mutateVerge } = useVerge();
+
+  const [open, setOpen] = useState(false);
+  const [commonIcon, setCommonIcon] = useState("");
+  const [sysproxyIcon, setSysproxyIcon] = useState("");
+  const [tunIcon, setTunIcon] = useState("");
+
+  useEffect(() => {
+    initIconPath();
+  }, []);
+
+  async function initIconPath() {
+    const appDir = await getAppDir();
+    const icon_dir = await join(appDir, "icons");
+    const common_icon_png = await join(icon_dir, "common.png");
+    const common_icon_ico = await join(icon_dir, "common.ico");
+    const sysproxy_icon_png = await join(icon_dir, "sysproxy.png");
+    const sysproxy_icon_ico = await join(icon_dir, "sysproxy.ico");
+    const tun_icon_png = await join(icon_dir, "tun.png");
+    const tun_icon_ico = await join(icon_dir, "tun.ico");
+    if (await exists(common_icon_ico)) {
+      setCommonIcon(common_icon_ico);
+    } else {
+      setCommonIcon(common_icon_png);
+    }
+    if (await exists(sysproxy_icon_ico)) {
+      setSysproxyIcon(sysproxy_icon_ico);
+    } else {
+      setSysproxyIcon(sysproxy_icon_png);
+    }
+    if (await exists(tun_icon_ico)) {
+      setTunIcon(tun_icon_ico);
+    } else {
+      setTunIcon(tun_icon_png);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     }
   }
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
     close: () => setOpen(false),
+<<<<<<< HEAD
   }))
 
   const onSwitchFormat = (_e: any, value: boolean) => value
@@ -108,19 +172,38 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge({ ...verge, ...patch }, false)
   }
+=======
+  }));
+
+  const onSwitchFormat = (_e: any, value: boolean) => value;
+  const onError = (err: any) => {
+    Notice.error(err.message || err.toString());
+  };
+  const onChangeData = (patch: Partial<IVergeConfig>) => {
+    mutateVerge({ ...verge, ...patch }, false);
+  };
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   return (
     <BaseDialog
       open={open}
+<<<<<<< HEAD
       title={t('settings.components.verge.layout.title')}
       contentSx={{ width: 450 }}
       disableOk
       cancelBtn={t('shared.actions.close')}
+=======
+      title={t("Layout Setting")}
+      contentSx={{ width: 450 }}
+      disableOk
+      cancelBtn={t("Close")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
       <List>
         <Item>
+<<<<<<< HEAD
           <ListItemText
             primary={t(
               'settings.components.verge.layout.fields.preferSystemTitlebar',
@@ -143,6 +226,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
           <ListItemText
             primary={t('settings.components.verge.layout.fields.trafficGraph')}
           />
+=======
+          <ListItemText primary={t("Traffic Graph")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <GuardState
             value={verge?.traffic_graph ?? true}
             valueProps="checked"
@@ -156,9 +242,13 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
+<<<<<<< HEAD
           <ListItemText
             primary={t('settings.components.verge.layout.fields.memoryUsage')}
           />
+=======
+          <ListItemText primary={t("Memory Usage")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <GuardState
             value={verge?.enable_memory_usage ?? true}
             valueProps="checked"
@@ -172,11 +262,15 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
+<<<<<<< HEAD
           <ListItemText
             primary={t(
               'settings.components.verge.layout.fields.proxyGroupIcon',
             )}
           />
+=======
+          <ListItemText primary={t("Proxy Group Icon")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <GuardState
             value={verge?.enable_group_icon ?? true}
             valueProps="checked"
@@ -190,6 +284,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
+<<<<<<< HEAD
           <ListItemText
             primary={t(
               'settings.components.verge.layout.fields.pauseRenderTrafficStatsOnBlur',
@@ -243,10 +338,25 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                   'settings.components.verge.layout.options.toastPosition.bottomLeft',
                 )}
               </MenuItem>
+=======
+          <ListItemText primary={t("Nav Icon")} />
+          <GuardState
+            value={verge?.menu_icon ?? "monochrome"}
+            onCatch={onError}
+            onFormat={(e: any) => e.target.value}
+            onChange={(e) => onChangeData({ menu_icon: e })}
+            onGuard={(e) => patchVerge({ menu_icon: e })}
+          >
+            <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
+              <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>
+              <MenuItem value="colorful">{t("Colorful")}</MenuItem>
+              <MenuItem value="disable">{t("Disable")}</MenuItem>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             </Select>
           </GuardState>
         </Item>
 
+<<<<<<< HEAD
         <Item>
           <ListItemText
             primary={
@@ -384,6 +494,13 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             />
             <GuardState
               value={verge?.tray_icon ?? 'monochrome'}
+=======
+        {OS === "macos" && (
+          <Item>
+            <ListItemText primary={t("Tray Icon")} />
+            <GuardState
+              value={verge?.tray_icon ?? "monochrome"}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               onCatch={onError}
               onFormat={(e: any) => e.target.value}
               onChange={(e) => onChangeData({ tray_icon: e })}
@@ -391,6 +508,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             >
               <Select
                 size="small"
+<<<<<<< HEAD
                 sx={{ width: 140, '> div': { py: '7.5px' } }}
               >
                 <MenuItem value="monochrome">
@@ -401,15 +519,29 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                 <MenuItem value="colorful">
                   {t('settings.components.verge.layout.options.icon.colorful')}
                 </MenuItem>
+=======
+                sx={{ width: 140, "> div": { py: "7.5px" } }}
+              >
+                <MenuItem value="monochrome">{t("Monochrome")}</MenuItem>
+                <MenuItem value="colorful">{t("Colorful")}</MenuItem>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               </Select>
             </GuardState>
           </Item>
         )}
+<<<<<<< HEAD
         {/* {OS === "macos" && (
           <Item>
             <ListItemText primary={t("settings.components.verge.layout.fields.enableTraySpeed")} />
             <GuardState
               value={verge?.enable_tray_speed ?? false}
+=======
+        {OS === "macos" && (
+          <Item>
+            <ListItemText primary={t("Enable Tray Speed")} />
+            <GuardState
+              value={verge?.enable_tray_speed ?? true}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               valueProps="checked"
               onCatch={onError}
               onFormat={onSwitchFormat}
@@ -419,6 +551,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               <Switch edge="end" />
             </GuardState>
           </Item>
+<<<<<<< HEAD
         )} */}
         {/* {OS === "macos" && (
           <Item>
@@ -500,6 +633,12 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               'settings.components.verge.layout.fields.commonTrayIcon',
             )}
           />
+=======
+        )}
+
+        <Item>
+          <ListItemText primary={t("Common Tray Icon")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <GuardState
             value={verge?.common_tray_icon}
             onCatch={onError}
@@ -517,14 +656,20 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }
               onClick={async () => {
                 if (verge?.common_tray_icon) {
+<<<<<<< HEAD
                   onChangeData({ common_tray_icon: false })
                   patchVerge({ common_tray_icon: false })
+=======
+                  onChangeData({ common_tray_icon: false });
+                  patchVerge({ common_tray_icon: false });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 } else {
                   const selected = await openDialog({
                     directory: false,
                     multiple: false,
                     filters: [
                       {
+<<<<<<< HEAD
                         name: 'Tray Icon Image',
                         extensions: ['png', 'ico'],
                       },
@@ -536,23 +681,43 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                     await initIconPath()
                     onChangeData({ common_tray_icon: true })
                     patchVerge({ common_tray_icon: true })
+=======
+                        name: "Tray Icon Image",
+                        extensions: ["png", "ico"],
+                      },
+                    ],
+                  });
+                  if (selected) {
+                    await copyIconFile(`${selected}`, "common");
+                    await initIconPath();
+                    onChangeData({ common_tray_icon: true });
+                    patchVerge({ common_tray_icon: true });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   }
                 }
               }}
             >
+<<<<<<< HEAD
               {verge?.common_tray_icon
                 ? t('shared.actions.clear')
                 : t('settings.components.verge.basic.actions.browse')}
+=======
+              {verge?.common_tray_icon ? t("Clear") : t("Browse")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             </Button>
           </GuardState>
         </Item>
 
         <Item>
+<<<<<<< HEAD
           <ListItemText
             primary={t(
               'settings.components.verge.layout.fields.systemProxyTrayIcon',
             )}
           />
+=======
+          <ListItemText primary={t("System Proxy Tray Icon")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <GuardState
             value={verge?.sysproxy_tray_icon}
             onCatch={onError}
@@ -570,14 +735,20 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }
               onClick={async () => {
                 if (verge?.sysproxy_tray_icon) {
+<<<<<<< HEAD
                   onChangeData({ sysproxy_tray_icon: false })
                   patchVerge({ sysproxy_tray_icon: false })
+=======
+                  onChangeData({ sysproxy_tray_icon: false });
+                  patchVerge({ sysproxy_tray_icon: false });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 } else {
                   const selected = await openDialog({
                     directory: false,
                     multiple: false,
                     filters: [
                       {
+<<<<<<< HEAD
                         name: 'Tray Icon Image',
                         extensions: ['png', 'ico'],
                       },
@@ -588,21 +759,41 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                     await initIconPath()
                     onChangeData({ sysproxy_tray_icon: true })
                     patchVerge({ sysproxy_tray_icon: true })
+=======
+                        name: "Tray Icon Image",
+                        extensions: ["png", "ico"],
+                      },
+                    ],
+                  });
+                  if (selected) {
+                    await copyIconFile(`${selected}`, "sysproxy");
+                    await initIconPath();
+                    onChangeData({ sysproxy_tray_icon: true });
+                    patchVerge({ sysproxy_tray_icon: true });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   }
                 }
               }}
             >
+<<<<<<< HEAD
               {verge?.sysproxy_tray_icon
                 ? t('shared.actions.clear')
                 : t('settings.components.verge.basic.actions.browse')}
+=======
+              {verge?.sysproxy_tray_icon ? t("Clear") : t("Browse")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             </Button>
           </GuardState>
         </Item>
 
         <Item>
+<<<<<<< HEAD
           <ListItemText
             primary={t('settings.components.verge.layout.fields.tunTrayIcon')}
           />
+=======
+          <ListItemText primary={t("Tun Tray Icon")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <GuardState
             value={verge?.tun_tray_icon}
             onCatch={onError}
@@ -618,14 +809,20 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }
               onClick={async () => {
                 if (verge?.tun_tray_icon) {
+<<<<<<< HEAD
                   onChangeData({ tun_tray_icon: false })
                   patchVerge({ tun_tray_icon: false })
+=======
+                  onChangeData({ tun_tray_icon: false });
+                  patchVerge({ tun_tray_icon: false });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 } else {
                   const selected = await openDialog({
                     directory: false,
                     multiple: false,
                     filters: [
                       {
+<<<<<<< HEAD
                         name: 'Tun Icon Image',
                         extensions: ['png', 'ico'],
                       },
@@ -636,21 +833,46 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                     await initIconPath()
                     onChangeData({ tun_tray_icon: true })
                     patchVerge({ tun_tray_icon: true })
+=======
+                        name: "Tun Icon Image",
+                        extensions: ["png", "ico"],
+                      },
+                    ],
+                  });
+                  if (selected) {
+                    await copyIconFile(`${selected}`, "tun");
+                    await initIconPath();
+                    onChangeData({ tun_tray_icon: true });
+                    patchVerge({ tun_tray_icon: true });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   }
                 }
               }}
             >
+<<<<<<< HEAD
               {verge?.tun_tray_icon
                 ? t('shared.actions.clear')
                 : t('settings.components.verge.basic.actions.browse')}
+=======
+              {verge?.tun_tray_icon ? t("Clear") : t("Browse")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             </Button>
           </GuardState>
         </Item>
       </List>
     </BaseDialog>
+<<<<<<< HEAD
   )
 })
 
 const Item = styled(ListItem)(() => ({
   padding: '5px 2px',
 }))
+=======
+  );
+});
+
+const Item = styled(ListItem)(() => ({
+  padding: "5px 2px",
+}));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

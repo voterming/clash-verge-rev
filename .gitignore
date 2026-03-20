@@ -9,9 +9,12 @@ scripts/_env.sh
 .vscode
 .tool-versions
 .idea
+<<<<<<< HEAD
 .old
 .eslintcache
 .changelog_backups
 target
 CLAUDE.md
 .vfox.toml
+=======
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

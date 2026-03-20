@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
+=======
+use serde_yaml::{Mapping, Value};
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 use std::collections::HashSet;
 
 pub const HANDLE_FIELDS: [&str; 12] = [
@@ -17,16 +21,32 @@ pub const HANDLE_FIELDS: [&str; 12] = [
     "unified-delay",
 ];
 
+<<<<<<< HEAD
 pub const DEFAULT_FIELDS: [&str; 5] = ["proxies", "proxy-providers", "proxy-groups", "rule-providers", "rules"];
 
 pub fn use_lowercase(config: &Mapping) -> Mapping {
+=======
+pub const DEFAULT_FIELDS: [&str; 5] = [
+    "proxies",
+    "proxy-providers",
+    "proxy-groups",
+    "rule-providers",
+    "rules",
+];
+
+pub fn use_lowercase(config: Mapping) -> Mapping {
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     let mut ret = Mapping::new();
 
     for (key, value) in config.into_iter() {
         if let Some(key_str) = key.as_str() {
             let mut key_str = String::from(key_str);
             key_str.make_ascii_lowercase();
+<<<<<<< HEAD
             ret.insert(Value::from(key_str.as_str()), value.clone());
+=======
+            ret.insert(Value::from(key_str), value);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         }
     }
     ret
@@ -61,6 +81,7 @@ pub fn use_sort(config: Mapping) -> Mapping {
     ret
 }
 
+<<<<<<< HEAD
 #[inline]
 pub fn use_keys<'a>(config: &'a Mapping) -> impl Iterator<Item = String> + 'a {
     config.iter().filter_map(|(key, _)| key.as_str()).map(|s: &str| {
@@ -68,4 +89,16 @@ pub fn use_keys<'a>(config: &'a Mapping) -> impl Iterator<Item = String> + 'a {
         s.make_ascii_lowercase();
         s
     })
+=======
+pub fn use_keys(config: &Mapping) -> Vec<String> {
+    config
+        .iter()
+        .filter_map(|(key, _)| key.as_str())
+        .map(|s| {
+            let mut s = s.to_string();
+            s.make_ascii_lowercase();
+            s
+        })
+        .collect()
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 }

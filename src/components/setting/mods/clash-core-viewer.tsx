@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   RestartAltRounded,
   SwitchAccessShortcutRounded,
@@ -45,10 +46,47 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [upgrading, setUpgrading] = useState(false)
   const [restarting, setRestarting] = useState(false)
   const [changingCore, setChangingCore] = useState<string | null>(null)
+=======
+import { mutate } from "swr";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { BaseDialog, DialogRef, Notice } from "@/components/base";
+import { useTranslation } from "react-i18next";
+import { useVerge } from "@/hooks/use-verge";
+import { useLockFn } from "ahooks";
+import { LoadingButton } from "@mui/lab";
+import {
+  SwitchAccessShortcutRounded,
+  RestartAltRounded,
+} from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  Chip,
+  List,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
+import { changeClashCore, restartCore } from "@/services/cmds";
+import { closeAllConnections, upgradeCore } from "@/services/api";
+
+const VALID_CORE = [
+  { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
+  { name: "Mihomo Alpha", core: "verge-mihomo-alpha", chip: "Alpha Version" },
+];
+
+export const ClashCoreViewer = forwardRef<DialogRef>((props, ref) => {
+  const { t } = useTranslation();
+
+  const { verge, mutateVerge } = useVerge();
+
+  const [open, setOpen] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
     close: () => setOpen(false),
+<<<<<<< HEAD
   }))
 
   const { clash_core = 'verge-mihomo' } = verge ?? {}
@@ -110,13 +148,60 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       showNotice.info(showMsg)
     }
   })
+=======
+  }));
+
+  const { clash_core = "verge-mihomo" } = verge ?? {};
+
+  const onCoreChange = useLockFn(async (core: string) => {
+    if (core === clash_core) return;
+
+    try {
+      closeAllConnections();
+      await changeClashCore(core);
+      mutateVerge();
+      setTimeout(() => {
+        mutate("getClashConfig");
+        mutate("getVersion");
+      }, 100);
+      Notice.success(t("Switched to _clash Core", { core: `${core}` }), 1000);
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
+  });
+
+  const onRestart = useLockFn(async () => {
+    try {
+      await restartCore();
+      Notice.success(t(`Clash Core Restarted`), 1000);
+    } catch (err: any) {
+      Notice.error(err?.message || err.toString());
+    }
+  });
+
+  const onUpgrade = useLockFn(async () => {
+    try {
+      setUpgrading(true);
+      await upgradeCore();
+      setUpgrading(false);
+      Notice.success(t(`Core Version Updated`), 1000);
+    } catch (err: any) {
+      setUpgrading(false);
+      Notice.error(err?.response.data.message || err.toString());
+    }
+  });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   return (
     <BaseDialog
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
+<<<<<<< HEAD
           {t('settings.sections.clash.form.fields.clashCore')}
+=======
+          {t("Clash Core")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <Box>
             <LoadingButton
               variant="contained"
@@ -124,6 +209,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               startIcon={<SwitchAccessShortcutRounded />}
               loadingPosition="start"
               loading={upgrading}
+<<<<<<< HEAD
               disabled={restarting || changingCore !== null}
               sx={{ marginRight: '8px' }}
               onClick={onUpgrade}
@@ -141,6 +227,21 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
             >
               {t('shared.actions.restart')}
             </LoadingButton>
+=======
+              sx={{ marginRight: "8px" }}
+              onClick={onUpgrade}
+            >
+              {t("Upgrade")}
+            </LoadingButton>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={onRestart}
+              startIcon={<RestartAltRounded />}
+            >
+              {t("Restart")}
+            </Button>
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           </Box>
         </Box>
       }
@@ -148,12 +249,21 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
         pb: 0,
         width: 400,
         height: 180,
+<<<<<<< HEAD
         overflowY: 'auto',
         userSelect: 'text',
         marginTop: '-8px',
       }}
       disableOk
       cancelBtn={t('shared.actions.close')}
+=======
+        overflowY: "auto",
+        userSelect: "text",
+        marginTop: "-8px",
+      }}
+      disableOk
+      cancelBtn={t("Close")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
@@ -163,6 +273,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
             key={each.core}
             selected={each.core === clash_core}
             onClick={() => onCoreChange(each.core)}
+<<<<<<< HEAD
             disabled={changingCore !== null || restarting || upgrading}
           >
             <ListItemText primary={each.name} secondary={`/${each.core}`} />
@@ -171,9 +282,19 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
             ) : (
               <Chip label={t(each.chipKey)} size="small" />
             )}
+=======
+          >
+            <ListItemText primary={each.name} secondary={`/${each.core}`} />
+            <Chip label={t(`${each.chip}`)} size="small" />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           </ListItemButton>
         ))}
       </List>
     </BaseDialog>
+<<<<<<< HEAD
   )
 }
+=======
+  );
+});
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

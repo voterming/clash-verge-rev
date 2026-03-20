@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { styled, Box, Typography } from '@mui/material'
 import { Rule } from 'tauri-plugin-mihomo-api'
 
@@ -46,13 +47,67 @@ const RuleItem = (props: Props) => {
       <Box sx={{ userSelect: 'text' }}>
         <Typography component="h6" variant="subtitle1" color="text.primary">
           {value.payload || '-'}
+=======
+import { styled, Box, Typography } from "@mui/material";
+
+const Item = styled(Box)(({ theme }) => ({
+  display: "flex",
+  padding: "4px 16px",
+  color: theme.palette.text.primary,
+}));
+
+const COLOR = [
+  "primary",
+  "secondary",
+  "info.main",
+  "warning.main",
+  "success.main",
+];
+
+interface Props {
+  index: number;
+  value: IRuleItem;
+}
+
+const parseColor = (text: string) => {
+  if (text === "REJECT" || text === "REJECT-DROP") return "error.main";
+  if (text === "DIRECT") return "text.primary";
+
+  let sum = 0;
+  for (let i = 0; i < text.length; i++) {
+    sum += text.charCodeAt(i);
+  }
+  return COLOR[sum % COLOR.length];
+};
+
+const RuleItem = (props: Props) => {
+  const { index, value } = props;
+
+  return (
+    <Item sx={{ borderBottom: "1px solid var(--divider-color)" }}>
+      <Typography
+        color="text.secondary"
+        variant="body2"
+        sx={{ lineHeight: 2, minWidth: 30, mr: 2.25, textAlign: "center" }}
+      >
+        {index}
+      </Typography>
+
+      <Box sx={{ userSelect: "text" }}>
+        <Typography component="h6" variant="subtitle1" color="text.primary">
+          {value.payload || "-"}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         </Typography>
 
         <Typography
           component="span"
           variant="body2"
           color="text.secondary"
+<<<<<<< HEAD
           sx={{ mr: 3, minWidth: 120, display: 'inline-block' }}
+=======
+          sx={{ mr: 3, minWidth: 120, display: "inline-block" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         >
           {value.type}
         </Typography>
@@ -66,7 +121,14 @@ const RuleItem = (props: Props) => {
         </Typography>
       </Box>
     </Item>
+<<<<<<< HEAD
   )
 }
 
 export default RuleItem
+=======
+  );
+};
+
+export default RuleItem;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

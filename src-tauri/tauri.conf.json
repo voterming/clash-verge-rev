@@ -1,5 +1,8 @@
 {
+<<<<<<< HEAD
   "version": "2.4.7",
+=======
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "active": true,
@@ -11,28 +14,44 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+<<<<<<< HEAD
     "resources": ["resources"],
+=======
+    "resources": ["resources", "resources/locales/*"],
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     "publisher": "Clash Verge Rev",
     "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
     "copyright": "GNU General Public License v3.0",
     "category": "DeveloperTool",
     "shortDescription": "Clash Verge Rev",
+<<<<<<< HEAD
     "createUpdaterArtifacts": true
+=======
+    "createUpdaterArtifacts": "v1Compatible"
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   },
   "build": {
     "beforeBuildCommand": "pnpm run web:build",
     "frontendDist": "../dist",
     "beforeDevCommand": "pnpm run web:dev",
+<<<<<<< HEAD
     "devUrl": "http://localhost:3000/",
     "removeUnusedCommands": true
   },
   "productName": "Clash Verge",
+=======
+    "devUrl": "http://localhost:3000/"
+  },
+  "productName": "Clash Verge",
+  "version": "2.0.3",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   "identifier": "io.github.clash-verge-rev.clash-verge-rev",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQyOEMyRjBCQkVGOUJEREYKUldUZnZmbStDeStNMHU5Mmo1N24xQXZwSVRYbXA2NUpzZE5oVzlqeS9Bc0t6RVV4MmtwVjBZaHgK",
       "endpoints": [
         "https://download.clashverge.dev/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
+<<<<<<< HEAD
         "https://gh-proxy.com/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
         "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json"
       ],
@@ -44,17 +63,31 @@
       "desktop": {
         "schemes": ["clash", "clash-verge"]
       }
+=======
+        "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json"
+      ]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["clash", "clash-verge"]
+      }
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     }
   },
   "app": {
     "security": {
       "capabilities": ["desktop-capability", "migrated"],
       "assetProtocol": {
+<<<<<<< HEAD
         "enable": true,
         "scope": {
           "allow": ["**"],
           "requireLiteralLeadingDot": false
         }
+=======
+        "scope": ["$APPDATA/**", "$RESOURCE/../**", "**"],
+        "enable": true
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       },
       "csp": null
     }

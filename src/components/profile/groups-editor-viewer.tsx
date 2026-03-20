@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   DndContext,
   DragEndEvent,
@@ -13,6 +14,25 @@ import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
 } from '@mui/icons-material'
+=======
+import { useEffect, useMemo, useState } from "react";
+import { useLockFn } from "ahooks";
+import yaml from "js-yaml";
+import { useTranslation } from "react-i18next";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 import {
   Autocomplete,
   Box,
@@ -27,6 +47,7 @@ import {
   ListItemText,
   TextField,
   styled,
+<<<<<<< HEAD
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import {
@@ -47,10 +68,19 @@ import { Virtuoso } from 'react-virtuoso'
 
 import { BaseSearchBox, Switch } from '@/components/base'
 import { GroupItem } from '@/components/profile/group-item'
+=======
+} from "@mui/material";
+import {
+  VerticalAlignTopRounded,
+  VerticalAlignBottomRounded,
+} from "@mui/icons-material";
+import { GroupItem } from "@/components/profile/group-item";
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 import {
   getNetworkInterfaces,
   readProfileFile,
   saveProfileFile,
+<<<<<<< HEAD
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
@@ -435,17 +465,285 @@ export const GroupsEditorViewer = (props: Props) => {
         {
           <Box display="flex" justifyContent="space-between">
             {t('profiles.modals.groupsEditor.title')}
+=======
+} from "@/services/cmds";
+import { Notice, Switch } from "@/components/base";
+import getSystem from "@/utils/get-system";
+import { BaseSearchBox } from "../base/base-search-box";
+import { Virtuoso } from "react-virtuoso";
+import MonacoEditor from "react-monaco-editor";
+import { useThemeMode } from "@/services/states";
+import { Controller, useForm } from "react-hook-form";
+
+interface Props {
+  proxiesUid: string;
+  mergeUid: string;
+  profileUid: string;
+  property: string;
+  open: boolean;
+  onClose: () => void;
+  onSave?: (prev?: string, curr?: string) => void;
+}
+
+const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
+
+export const GroupsEditorViewer = (props: Props) => {
+  const { mergeUid, proxiesUid, profileUid, property, open, onClose, onSave } =
+    props;
+  const { t } = useTranslation();
+  const themeMode = useThemeMode();
+  const [prevData, setPrevData] = useState("");
+  const [currData, setCurrData] = useState("");
+  const [visualization, setVisualization] = useState(true);
+  const [match, setMatch] = useState(() => (_: string) => true);
+  const [interfaceNameList, setInterfaceNameList] = useState<string[]>([]);
+  const { control, watch, register, ...formIns } = useForm<IProxyGroupConfig>({
+    defaultValues: {
+      type: "select",
+      name: "",
+      interval: 300,
+      timeout: 5000,
+      "max-failed-times": 5,
+      lazy: true,
+    },
+  });
+  const [groupList, setGroupList] = useState<IProxyGroupConfig[]>([]);
+  const [proxyPolicyList, setProxyPolicyList] = useState<string[]>([]);
+  const [proxyProviderList, setProxyProviderList] = useState<string[]>([]);
+  const [prependSeq, setPrependSeq] = useState<IProxyGroupConfig[]>([]);
+  const [appendSeq, setAppendSeq] = useState<IProxyGroupConfig[]>([]);
+  const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
+
+  const filteredPrependSeq = useMemo(
+    () => prependSeq.filter((group) => match(group.name)),
+    [prependSeq, match]
+  );
+  const filteredGroupList = useMemo(
+    () => groupList.filter((group) => match(group.name)),
+    [groupList, match]
+  );
+  const filteredAppendSeq = useMemo(
+    () => appendSeq.filter((group) => match(group.name)),
+    [appendSeq, match]
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  const reorder = (
+    list: IProxyGroupConfig[],
+    startIndex: number,
+    endIndex: number
+  ) => {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    return result;
+  };
+  const onPrependDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over) {
+      if (active.id !== over.id) {
+        let activeIndex = 0;
+        let overIndex = 0;
+        prependSeq.forEach((item, index) => {
+          if (item.name === active.id) {
+            activeIndex = index;
+          }
+          if (item.name === over.id) {
+            overIndex = index;
+          }
+        });
+
+        setPrependSeq(reorder(prependSeq, activeIndex, overIndex));
+      }
+    }
+  };
+  const onAppendDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over) {
+      if (active.id !== over.id) {
+        let activeIndex = 0;
+        let overIndex = 0;
+        appendSeq.forEach((item, index) => {
+          if (item.name === active.id) {
+            activeIndex = index;
+          }
+          if (item.name === over.id) {
+            overIndex = index;
+          }
+        });
+        setAppendSeq(reorder(appendSeq, activeIndex, overIndex));
+      }
+    }
+  };
+  const fetchContent = async () => {
+    let data = await readProfileFile(property);
+    let obj = yaml.load(data) as ISeqProfileConfig | null;
+
+    setPrependSeq(obj?.prepend || []);
+    setAppendSeq(obj?.append || []);
+    setDeleteSeq(obj?.delete || []);
+
+    setPrevData(data);
+    setCurrData(data);
+  };
+
+  useEffect(() => {
+    if (currData === "") return;
+    if (visualization !== true) return;
+
+    let obj = yaml.load(currData) as {
+      prepend: [];
+      append: [];
+      delete: [];
+    } | null;
+    setPrependSeq(obj?.prepend || []);
+    setAppendSeq(obj?.append || []);
+    setDeleteSeq(obj?.delete || []);
+  }, [visualization]);
+
+  useEffect(() => {
+    if (prependSeq && appendSeq && deleteSeq)
+      setCurrData(
+        yaml.dump(
+          { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
+          {
+            forceQuotes: true,
+          }
+        )
+      );
+  }, [prependSeq, appendSeq, deleteSeq]);
+
+  const fetchProxyPolicy = async () => {
+    let data = await readProfileFile(profileUid);
+    let proxiesData = await readProfileFile(proxiesUid);
+    let originGroupsObj = yaml.load(data) as {
+      "proxy-groups": IProxyGroupConfig[];
+    } | null;
+
+    let originProxiesObj = yaml.load(data) as { proxies: [] } | null;
+    let originProxies = originProxiesObj?.proxies || [];
+    let moreProxiesObj = yaml.load(proxiesData) as ISeqProfileConfig | null;
+    let morePrependProxies = moreProxiesObj?.prepend || [];
+    let moreAppendProxies = moreProxiesObj?.append || [];
+    let moreDeleteProxies =
+      moreProxiesObj?.delete || ([] as string[] | { name: string }[]);
+
+    let proxies = morePrependProxies.concat(
+      originProxies.filter((proxy: any) => {
+        if (proxy.name) {
+          return !moreDeleteProxies.includes(proxy.name);
+        } else {
+          return !moreDeleteProxies.includes(proxy);
+        }
+      }),
+      moreAppendProxies
+    );
+
+    setProxyPolicyList(
+      builtinProxyPolicies.concat(
+        prependSeq.map((group: IProxyGroupConfig) => group.name),
+        originGroupsObj?.["proxy-groups"]
+          .map((group: IProxyGroupConfig) => group.name)
+          .filter((name) => !deleteSeq.includes(name)) || [],
+        appendSeq.map((group: IProxyGroupConfig) => group.name),
+        proxies.map((proxy: any) => proxy.name)
+      )
+    );
+  };
+  const fetchProfile = async () => {
+    let data = await readProfileFile(profileUid);
+    let mergeData = await readProfileFile(mergeUid);
+    let globalMergeData = await readProfileFile("Merge");
+
+    let originGroupsObj = yaml.load(data) as {
+      "proxy-groups": IProxyGroupConfig[];
+    } | null;
+
+    let originProviderObj = yaml.load(data) as { "proxy-providers": {} } | null;
+    let originProvider = originProviderObj?.["proxy-providers"] || {};
+
+    let moreProviderObj = yaml.load(mergeData) as {
+      "proxy-providers": {};
+    } | null;
+    let moreProvider = moreProviderObj?.["proxy-providers"] || {};
+
+    let globalProviderObj = yaml.load(globalMergeData) as {
+      "proxy-providers": {};
+    } | null;
+    let globalProvider = globalProviderObj?.["proxy-providers"] || {};
+
+    let provider = Object.assign(
+      {},
+      originProvider,
+      moreProvider,
+      globalProvider
+    );
+
+    setProxyProviderList(Object.keys(provider));
+    setGroupList(originGroupsObj?.["proxy-groups"] || []);
+  };
+  const getInterfaceNameList = async () => {
+    let list = await getNetworkInterfaces();
+    setInterfaceNameList(list);
+  };
+  useEffect(() => {
+    fetchProxyPolicy();
+  }, [prependSeq, appendSeq, deleteSeq]);
+  useEffect(() => {
+    if (!open) return;
+    fetchContent();
+    fetchProxyPolicy();
+    fetchProfile();
+    getInterfaceNameList();
+  }, [open]);
+
+  const validateGroup = () => {
+    let group = formIns.getValues();
+    if (group.name === "") {
+      throw new Error(t("Group Name Required"));
+    }
+  };
+
+  const handleSave = useLockFn(async () => {
+    try {
+      await saveProfileFile(property, currData);
+      onSave?.(prevData, currData);
+      onClose();
+    } catch (err: any) {
+      Notice.error(err.message || err.toString());
+    }
+  });
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
+      <DialogTitle>
+        {
+          <Box display="flex" justifyContent="space-between">
+            {t("Edit Groups")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             <Box>
               <Button
                 variant="contained"
                 size="small"
                 onClick={() => {
+<<<<<<< HEAD
                   setVisualization((prev) => !prev)
                 }}
               >
                 {visualization
                   ? t('shared.editorModes.advanced')
                   : t('shared.editorModes.visualization')}
+=======
+                  setVisualization((prev) => !prev);
+                }}
+              >
+                {visualization ? t("Advanced") : t("Visualization")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               </Button>
             </Box>
           </Box>
@@ -453,20 +751,34 @@ export const GroupsEditorViewer = (props: Props) => {
       </DialogTitle>
 
       <DialogContent
+<<<<<<< HEAD
         sx={{ display: 'flex', width: 'auto', height: 'calc(100vh - 185px)' }}
+=======
+        sx={{ display: "flex", width: "auto", height: "calc(100vh - 185px)" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       >
         {visualization ? (
           <>
             <List
               sx={{
+<<<<<<< HEAD
                 width: '50%',
                 padding: '0 10px',
+=======
+                width: "50%",
+                padding: "0 10px",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               }}
             >
               <Box
                 sx={{
+<<<<<<< HEAD
                   height: 'calc(100% - 80px)',
                   overflowY: 'auto',
+=======
+                  height: "calc(100% - 80px)",
+                  overflowY: "auto",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 }}
               >
                 <Controller
@@ -474,6 +786,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t('profiles.modals.groupsEditor.fields.type')}
                       />
@@ -501,6 +814,25 @@ export const GroupsEditorViewer = (props: Props) => {
                             </li>
                           )
                         }}
+=======
+                      <ListItemText primary={t("Group Type")} />
+                      <Autocomplete
+                        size="small"
+                        sx={{ width: "calc(100% - 150px)" }}
+                        options={[
+                          "select",
+                          "url-test",
+                          "fallback",
+                          "load-balance",
+                          "relay",
+                        ]}
+                        value={field.value}
+                        renderOption={(props, option) => (
+                          <li {...props} title={t(option)}>
+                            {option}
+                          </li>
+                        )}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         onChange={(_, value) => value && field.onChange(value)}
                         renderInput={(params) => <TextField {...params} />}
                       />
@@ -512,6 +844,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t('profiles.modals.groupsEditor.fields.name')}
                       />
@@ -521,6 +854,15 @@ export const GroupsEditorViewer = (props: Props) => {
                         sx={{ width: 'calc(100% - 150px)' }}
                         {...field}
                         error={field.value === ''}
+=======
+                      <ListItemText primary={t("Group Name")} />
+                      <TextField
+                        autoComplete="new-password"
+                        size="small"
+                        sx={{ width: "calc(100% - 150px)" }}
+                        {...field}
+                        error={field.value === ""}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         required={true}
                       />
                     </Item>
@@ -531,6 +873,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t('profiles.modals.groupsEditor.fields.icon')}
                       />
@@ -538,6 +881,13 @@ export const GroupsEditorViewer = (props: Props) => {
                         autoComplete="new-password"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+=======
+                      <ListItemText primary={t("Proxy Group Icon")} />
+                      <TextField
+                        autoComplete="new-password"
+                        size="small"
+                        sx={{ width: "calc(100% - 150px)" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         {...field}
                       />
                     </Item>
@@ -548,6 +898,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.proxies',
@@ -557,12 +908,20 @@ export const GroupsEditorViewer = (props: Props) => {
                         size="small"
                         sx={{
                           width: 'calc(100% - 150px)',
+=======
+                      <ListItemText primary={t("Use Proxies")} />
+                      <Autocomplete
+                        size="small"
+                        sx={{
+                          width: "calc(100% - 150px)",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }}
                         multiple
                         options={proxyPolicyList}
                         disableCloseOnSelect
                         onChange={(_, value) => value && field.onChange(value)}
                         renderInput={(params) => <TextField {...params} />}
+<<<<<<< HEAD
                         renderOption={(props, option) => {
                           const { key, ...optionProps } = props
                           return (
@@ -576,6 +935,13 @@ export const GroupsEditorViewer = (props: Props) => {
                           )
                         }}
                         getOptionLabel={translatePolicy}
+=======
+                        renderOption={(props, option) => (
+                          <li {...props} title={t(option)}>
+                            {option}
+                          </li>
+                        )}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       />
                     </Item>
                   )}
@@ -585,6 +951,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.provider',
@@ -593,6 +960,12 @@ export const GroupsEditorViewer = (props: Props) => {
                       <Autocomplete
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+=======
+                      <ListItemText primary={t("Use Provider")} />
+                      <Autocomplete
+                        size="small"
+                        sx={{ width: "calc(100% - 150px)" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         multiple
                         options={proxyProviderList}
                         disableCloseOnSelect
@@ -607,6 +980,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.healthCheckUrl',
@@ -617,6 +991,14 @@ export const GroupsEditorViewer = (props: Props) => {
                         placeholder="http://cp.cloudflare.com"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+=======
+                      <ListItemText primary={t("Health Check Url")} />
+                      <TextField
+                        autoComplete="new-password"
+                        placeholder="https://www.gstatic.com/generate_204"
+                        size="small"
+                        sx={{ width: "calc(100% - 150px)" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         {...field}
                       />
                     </Item>
@@ -627,18 +1009,28 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.expectedStatus',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Expected Status")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <TextField
                         autoComplete="new-password"
                         placeholder="*"
                         size="small"
+<<<<<<< HEAD
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
+=======
+                        sx={{ width: "calc(100% - 150px)" }}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }}
                       />
                     </Item>
@@ -649,16 +1041,21 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.interval',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Interval")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <TextField
                         autoComplete="new-password"
                         placeholder="300"
                         type="number"
                         size="small"
+<<<<<<< HEAD
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
@@ -671,6 +1068,18 @@ export const GroupsEditorViewer = (props: Props) => {
                               </InputAdornment>
                             ),
                           },
+=======
+                        sx={{ width: "calc(100% - 150px)" }}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value));
+                        }}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              {t("seconds")}
+                            </InputAdornment>
+                          ),
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }}
                       />
                     </Item>
@@ -681,12 +1090,17 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText primary={t('shared.labels.timeout')} />
+=======
+                      <ListItemText primary={t("Timeout")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <TextField
                         autoComplete="new-password"
                         placeholder="5000"
                         type="number"
                         size="small"
+<<<<<<< HEAD
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
@@ -699,6 +1113,18 @@ export const GroupsEditorViewer = (props: Props) => {
                               </InputAdornment>
                             ),
                           },
+=======
+                        sx={{ width: "calc(100% - 150px)" }}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value));
+                        }}
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              {t("millis")}
+                            </InputAdornment>
+                          ),
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }}
                       />
                     </Item>
@@ -709,19 +1135,29 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.maxFailedTimes',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Max Failed Times")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <TextField
                         autoComplete="new-password"
                         placeholder="5"
                         type="number"
                         size="small"
+<<<<<<< HEAD
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
+=======
+                        sx={{ width: "calc(100% - 150px)" }}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }}
                       />
                     </Item>
@@ -732,6 +1168,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.interfaceName',
@@ -740,6 +1177,12 @@ export const GroupsEditorViewer = (props: Props) => {
                       <Autocomplete
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+=======
+                      <ListItemText primary={t("Interface Name")} />
+                      <Autocomplete
+                        size="small"
+                        sx={{ width: "calc(100% - 150px)" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         options={interfaceNameList}
                         value={field.value}
                         onChange={(_, value) => value && field.onChange(value)}
@@ -753,18 +1196,28 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.routingMark',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Routing Mark")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <TextField
                         autoComplete="new-password"
                         type="number"
                         size="small"
+<<<<<<< HEAD
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
+=======
+                        sx={{ width: "calc(100% - 150px)" }}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }}
                       />
                     </Item>
@@ -775,6 +1228,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.filter',
@@ -784,6 +1238,13 @@ export const GroupsEditorViewer = (props: Props) => {
                         autoComplete="new-password"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+=======
+                      <ListItemText primary={t("Filter")} />
+                      <TextField
+                        autoComplete="new-password"
+                        size="small"
+                        sx={{ width: "calc(100% - 150px)" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         {...field}
                       />
                     </Item>
@@ -794,6 +1255,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.excludeFilter',
@@ -803,6 +1265,13 @@ export const GroupsEditorViewer = (props: Props) => {
                         autoComplete="new-password"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+=======
+                      <ListItemText primary={t("Exclude Filter")} />
+                      <TextField
+                        autoComplete="new-password"
+                        size="small"
+                        sx={{ width: "calc(100% - 150px)" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         {...field}
                       />
                     </Item>
@@ -813,6 +1282,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.excludeType',
@@ -856,6 +1326,43 @@ export const GroupsEditorViewer = (props: Props) => {
                         value={field.value?.split('|')}
                         onChange={(_, value) => {
                           field.onChange(value.join('|'))
+=======
+                      <ListItemText primary={t("Exclude Type")} />
+                      <Autocomplete
+                        multiple
+                        options={[
+                          "Direct",
+                          "Reject",
+                          "RejectDrop",
+                          "Compatible",
+                          "Pass",
+                          "Dns",
+                          "Shadowsocks",
+                          "ShadowsocksR",
+                          "Snell",
+                          "Socks5",
+                          "Http",
+                          "Vmess",
+                          "Vless",
+                          "Trojan",
+                          "Hysteria",
+                          "Hysteria2",
+                          "WireGuard",
+                          "Tuic",
+                          "Relay",
+                          "Selector",
+                          "Fallback",
+                          "URLTest",
+                          "LoadBalance",
+                          "Ssh",
+                        ]}
+                        size="small"
+                        disableCloseOnSelect
+                        sx={{ width: "calc(100% - 150px)" }}
+                        value={field.value?.split("|")}
+                        onChange={(_, value) => {
+                          field.onChange(value.join("|"));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }}
                         renderInput={(params) => <TextField {...params} />}
                       />
@@ -867,11 +1374,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.includeAll',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Include All")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <Switch checked={field.value} {...field} />
                     </Item>
                   )}
@@ -881,11 +1392,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.includeAllProxies',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Include All Proxies")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <Switch checked={field.value} {...field} />
                     </Item>
                   )}
@@ -895,11 +1410,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.fields.includeAllProviders',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Include All Providers")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <Switch checked={field.value} {...field} />
                     </Item>
                   )}
@@ -909,9 +1428,13 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t('profiles.modals.groupsEditor.toggles.lazy')}
                       />
+=======
+                      <ListItemText primary={t("Lazy")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <Switch checked={field.value} {...field} />
                     </Item>
                   )}
@@ -921,11 +1444,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.toggles.disableUdp',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Disable UDP")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <Switch checked={field.value} {...field} />
                     </Item>
                   )}
@@ -935,11 +1462,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
+<<<<<<< HEAD
                       <ListItemText
                         primary={t(
                           'profiles.modals.groupsEditor.toggles.hidden',
                         )}
                       />
+=======
+                      <ListItemText primary={t("Hidden")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                       <Switch checked={field.value} {...field} />
                     </Item>
                   )}
@@ -952,6 +1483,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   startIcon={<VerticalAlignTopRounded />}
                   onClick={() => {
                     try {
+<<<<<<< HEAD
                       validateGroup()
                       for (const item of [...prependSeq, ...groupList]) {
                         if (item.name === formIns.getValues().name) {
@@ -967,6 +1499,21 @@ export const GroupsEditorViewer = (props: Props) => {
                   }}
                 >
                   {t('profiles.modals.groupsEditor.actions.prepend')}
+=======
+                      validateGroup();
+                      for (const item of [...prependSeq, ...groupList]) {
+                        if (item.name === formIns.getValues().name) {
+                          throw new Error(t("Group Name Already Exists"));
+                        }
+                      }
+                      setPrependSeq([formIns.getValues(), ...prependSeq]);
+                    } catch (err: any) {
+                      Notice.error(err.message || err.toString());
+                    }
+                  }}
+                >
+                  {t("Prepend Group")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 </Button>
               </Item>
               <Item>
@@ -976,6 +1523,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   startIcon={<VerticalAlignBottomRounded />}
                   onClick={() => {
                     try {
+<<<<<<< HEAD
                       validateGroup()
                       for (const item of [...appendSeq, ...groupList]) {
                         if (item.name === formIns.getValues().name) {
@@ -991,19 +1539,43 @@ export const GroupsEditorViewer = (props: Props) => {
                   }}
                 >
                   {t('profiles.modals.groupsEditor.actions.append')}
+=======
+                      validateGroup();
+                      for (const item of [...appendSeq, ...groupList]) {
+                        if (item.name === formIns.getValues().name) {
+                          throw new Error(t("Group Name Already Exists"));
+                        }
+                      }
+                      setAppendSeq([...appendSeq, formIns.getValues()]);
+                    } catch (err: any) {
+                      Notice.error(err.message || err.toString());
+                    }
+                  }}
+                >
+                  {t("Append Group")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 </Button>
               </Item>
             </List>
 
             <List
               sx={{
+<<<<<<< HEAD
                 width: '50%',
                 padding: '0 10px',
+=======
+                width: "50%",
+                padding: "0 10px",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
               <Virtuoso
+<<<<<<< HEAD
                 style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
+=======
+                style={{ height: "calc(100% - 24px)", marginTop: "8px" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                 totalCount={
                   filteredGroupList.length +
                   (filteredPrependSeq.length > 0 ? 1 : 0) +
@@ -1011,7 +1583,11 @@ export const GroupsEditorViewer = (props: Props) => {
                 }
                 increaseViewportBy={256}
                 itemContent={(index) => {
+<<<<<<< HEAD
                   const shift = filteredPrependSeq.length > 0 ? 1 : 0
+=======
+                  let shift = filteredPrependSeq.length > 0 ? 1 : 0;
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   if (filteredPrependSeq.length > 0 && index === 0) {
                     return (
                       <DndContext
@@ -1021,6 +1597,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       >
                         <SortableContext
                           items={filteredPrependSeq.map((x) => {
+<<<<<<< HEAD
                             return x.name
                           })}
                         >
@@ -1028,11 +1605,21 @@ export const GroupsEditorViewer = (props: Props) => {
                             return (
                               <GroupItem
                                 key={item.name}
+=======
+                            return x.name;
+                          })}
+                        >
+                          {filteredPrependSeq.map((item, index) => {
+                            return (
+                              <GroupItem
+                                key={`${item.name}-${index}`}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                                 type="prepend"
                                 group={item}
                                 onDelete={() => {
                                   setPrependSeq(
                                     prependSeq.filter(
+<<<<<<< HEAD
                                       (v) => v.name !== item.name,
                                     ),
                                   )
@@ -1052,6 +1639,27 @@ export const GroupsEditorViewer = (props: Props) => {
                           deleteSeq.includes(filteredGroupList[newIndex].name)
                             ? 'delete'
                             : 'original'
+=======
+                                      (v) => v.name !== item.name
+                                    )
+                                  );
+                                }}
+                              />
+                            );
+                          })}
+                        </SortableContext>
+                      </DndContext>
+                    );
+                  } else if (index < filteredGroupList.length + shift) {
+                    let newIndex = index - shift;
+                    return (
+                      <GroupItem
+                        key={`${filteredGroupList[newIndex].name}-${index}`}
+                        type={
+                          deleteSeq.includes(filteredGroupList[newIndex].name)
+                            ? "delete"
+                            : "original"
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                         }
                         group={filteredGroupList[newIndex]}
                         onDelete={() => {
@@ -1060,18 +1668,32 @@ export const GroupsEditorViewer = (props: Props) => {
                           ) {
                             setDeleteSeq(
                               deleteSeq.filter(
+<<<<<<< HEAD
                                 (v) => v !== filteredGroupList[newIndex].name,
                               ),
                             )
+=======
+                                (v) => v !== filteredGroupList[newIndex].name
+                              )
+                            );
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                           } else {
                             setDeleteSeq((prev) => [
                               ...prev,
                               filteredGroupList[newIndex].name,
+<<<<<<< HEAD
                             ])
                           }
                         }}
                       />
                     )
+=======
+                            ]);
+                          }
+                        }}
+                      />
+                    );
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   } else {
                     return (
                       <DndContext
@@ -1081,6 +1703,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       >
                         <SortableContext
                           items={filteredAppendSeq.map((x) => {
+<<<<<<< HEAD
                             return x.name
                           })}
                         >
@@ -1088,11 +1711,21 @@ export const GroupsEditorViewer = (props: Props) => {
                             return (
                               <GroupItem
                                 key={item.name}
+=======
+                            return x.name;
+                          })}
+                        >
+                          {filteredAppendSeq.map((item, index) => {
+                            return (
+                              <GroupItem
+                                key={`${item.name}-${index}`}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                                 type="append"
                                 group={item}
                                 onDelete={() => {
                                   setAppendSeq(
                                     appendSeq.filter(
+<<<<<<< HEAD
                                       (v) => v.name !== item.name,
                                     ),
                                   )
@@ -1103,6 +1736,18 @@ export const GroupsEditorViewer = (props: Props) => {
                         </SortableContext>
                       </DndContext>
                     )
+=======
+                                      (v) => v.name !== item.name
+                                    )
+                                  );
+                                }}
+                              />
+                            );
+                          })}
+                        </SortableContext>
+                      </DndContext>
+                    );
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
                   }
                 }}
               />
@@ -1113,7 +1758,11 @@ export const GroupsEditorViewer = (props: Props) => {
             height="100%"
             language="yaml"
             value={currData}
+<<<<<<< HEAD
             theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+=======
+            theme={themeMode === "light" ? "vs" : "vs-dark"}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             options={{
               tabSize: 2, // 根据语言类型设置缩进大小
               minimap: {
@@ -1129,18 +1778,28 @@ export const GroupsEditorViewer = (props: Props) => {
                 top: 33, // 顶部padding防止遮挡snippets
               },
               fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
+<<<<<<< HEAD
                 getSystem() === 'windows' ? ', twemoji mozilla' : ''
               }`,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}
             onChange={(value) => setCurrData(value ?? '')}
+=======
+                getSystem() === "windows" ? ", twemoji mozilla" : ""
+              }`,
+              fontLigatures: true, // 连字符
+              smoothScrolling: true, // 平滑滚动
+            }}
+            onChange={(value) => setCurrData(value)}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           />
         )}
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
+<<<<<<< HEAD
           {t('shared.actions.cancel')}
         </Button>
 
@@ -1155,3 +1814,19 @@ export const GroupsEditorViewer = (props: Props) => {
 const Item = styled(ListItem)(() => ({
   padding: '5px 2px',
 }))
+=======
+          {t("Cancel")}
+        </Button>
+
+        <Button onClick={handleSave} variant="contained">
+          {t("Save")}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const Item = styled(ListItem)(() => ({
+  padding: "5px 2px",
+}));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

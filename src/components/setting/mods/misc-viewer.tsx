@@ -1,11 +1,19 @@
+<<<<<<< HEAD
 import {
   InputAdornment,
+=======
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useLockFn } from "ahooks";
+import { useTranslation } from "react-i18next";
+import {
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   List,
   ListItem,
   ListItemText,
   MenuItem,
   Select,
   TextField,
+<<<<<<< HEAD
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { forwardRef, useImperativeHandle, useState } from 'react'
@@ -24,10 +32,26 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     appLogLevel: 'warn',
     appLogMaxSize: 8,
     appLogMaxCount: 12,
+=======
+  InputAdornment,
+} from "@mui/material";
+import { useVerge } from "@/hooks/use-verge";
+import { BaseDialog, DialogRef, Notice, Switch } from "@/components/base";
+import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+
+export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
+  const { t } = useTranslation();
+  const { verge, patchVerge } = useVerge();
+
+  const [open, setOpen] = useState(false);
+  const [values, setValues] = useState({
+    appLogLevel: "info",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
     autoCloseConnection: true,
     autoCheckUpdate: true,
     enableBuiltinEnhanced: true,
     proxyLayoutColumn: 6,
+<<<<<<< HEAD
     enableAutoDelayDetection: false,
     autoDelayDetectionIntervalMinutes: 5,
     defaultLatencyTest: '',
@@ -42,10 +66,23 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         appLogLevel: verge?.app_log_level ?? 'warn',
         appLogMaxSize: verge?.app_log_max_size ?? 128,
         appLogMaxCount: verge?.app_log_max_count ?? 8,
+=======
+    defaultLatencyTest: "",
+    autoLogClean: 0,
+    defaultLatencyTimeout: 10000,
+  });
+
+  useImperativeHandle(ref, () => ({
+    open: () => {
+      setOpen(true);
+      setValues({
+        appLogLevel: verge?.app_log_level ?? "info",
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         autoCloseConnection: verge?.auto_close_connection ?? true,
         autoCheckUpdate: verge?.auto_check_update ?? true,
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
         proxyLayoutColumn: verge?.proxy_layout_column || 6,
+<<<<<<< HEAD
         enableAutoDelayDetection: verge?.enable_auto_delay_detection ?? false,
         autoDelayDetectionIntervalMinutes:
           verge?.auto_delay_detection_interval_minutes ?? 5,
@@ -56,17 +93,30 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     },
     close: () => setOpen(false),
   }))
+=======
+        defaultLatencyTest: verge?.default_latency_test || "",
+        autoLogClean: verge?.auto_log_clean || 0,
+        defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
+      });
+    },
+    close: () => setOpen(false),
+  }));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   const onSave = useLockFn(async () => {
     try {
       await patchVerge({
         app_log_level: values.appLogLevel,
+<<<<<<< HEAD
         app_log_max_size: values.appLogMaxSize,
         app_log_max_count: values.appLogMaxCount,
+=======
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
         auto_close_connection: values.autoCloseConnection,
         auto_check_update: values.autoCheckUpdate,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
+<<<<<<< HEAD
         enable_auto_delay_detection: values.enableAutoDelayDetection,
         auto_delay_detection_interval_minutes:
           values.autoDelayDetectionIntervalMinutes,
@@ -79,19 +129,38 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       showNotice.error(err)
     }
   })
+=======
+        default_latency_test: values.defaultLatencyTest,
+        default_latency_timeout: values.defaultLatencyTimeout,
+        auto_log_clean: values.autoLogClean as any,
+      });
+      setOpen(false);
+    } catch (err: any) {
+      Notice.error(err.message || err.toString());
+    }
+  });
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
   return (
     <BaseDialog
       open={open}
+<<<<<<< HEAD
       title={t('settings.modals.misc.title')}
       contentSx={{ width: 450 }}
       okBtn={t('shared.actions.save')}
       cancelBtn={t('shared.actions.cancel')}
+=======
+      title={t("Miscellaneous")}
+      contentSx={{ width: 450 }}
+      okBtn={t("Save")}
+      cancelBtn={t("Cancel")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <List>
+<<<<<<< HEAD
         <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
             primary={t('settings.modals.misc.fields.appLogLevel')}
@@ -99,6 +168,13 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <Select
             size="small"
             sx={{ width: 100, '> div': { py: '7.5px' } }}
+=======
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("App Log Level")} />
+          <Select
+            size="small"
+            sx={{ width: 100, "> div": { py: "7.5px" } }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             value={values.appLogLevel}
             onChange={(e) =>
               setValues((v) => ({
@@ -107,7 +183,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
               }))
             }
           >
+<<<<<<< HEAD
             {['trace', 'debug', 'info', 'warn', 'error', 'silent'].map((i) => (
+=======
+            {["trace", "debug", "info", "warn", "error", "silent"].map((i) => (
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
               <MenuItem value={i} key={i}>
                 {i[0].toUpperCase() + i.slice(1).toLowerCase()}
               </MenuItem>
@@ -115,6 +195,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
+<<<<<<< HEAD
         <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
             primary={t('settings.modals.misc.fields.appLogMaxSize')}
@@ -187,6 +268,16 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <TooltipIcon
             title={t('settings.modals.misc.tooltips.autoCloseConnections')}
             sx={{ opacity: '0.7' }}
+=======
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText
+            primary={t("Auto Close Connections")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TooltipIcon
+            title={t("Auto Close Connections Info")}
+            sx={{ opacity: "0.7" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           />
           <Switch
             edge="end"
@@ -194,6 +285,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoCloseConnection: c }))
             }
+<<<<<<< HEAD
             sx={{ marginLeft: 'auto' }}
           />
         </ListItem>
@@ -202,6 +294,14 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <ListItemText
             primary={t('settings.modals.misc.fields.autoCheckUpdate')}
           />
+=======
+            sx={{ marginLeft: "auto" }}
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Auto Check Update")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <Switch
             edge="end"
             checked={values.autoCheckUpdate}
@@ -211,6 +311,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
+<<<<<<< HEAD
         <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
             primary={t('settings.modals.misc.fields.enableBuiltinEnhanced')}
@@ -219,6 +320,16 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <TooltipIcon
             title={t('settings.modals.misc.tooltips.enableBuiltinEnhanced')}
             sx={{ opacity: '0.7' }}
+=======
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText
+            primary={t("Enable Builtin Enhanced")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TooltipIcon
+            title={t("Enable Builtin Enhanced Info")}
+            sx={{ opacity: "0.7" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           />
           <Switch
             edge="end"
@@ -226,6 +337,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(_, c) =>
               setValues((v) => ({ ...v, enableBuiltinEnhanced: c }))
             }
+<<<<<<< HEAD
             sx={{ marginLeft: 'auto' }}
           />
         </ListItem>
@@ -237,6 +349,17 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <Select
             size="small"
             sx={{ width: 160, '> div': { py: '7.5px' } }}
+=======
+            sx={{ marginLeft: "auto" }}
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Proxy Layout Columns")} />
+          <Select
+            size="small"
+            sx={{ width: 135, "> div": { py: "7.5px" } }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             value={values.proxyLayoutColumn}
             onChange={(e) =>
               setValues((v) => ({
@@ -246,7 +369,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             }
           >
             <MenuItem value={6} key={6}>
+<<<<<<< HEAD
               {t('settings.modals.misc.options.proxyLayoutColumns.auto')}
+=======
+              {t("Auto Columns")}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             </MenuItem>
             {[1, 2, 3, 4, 5].map((i) => (
               <MenuItem value={i} key={i}>
@@ -256,6 +383,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
+<<<<<<< HEAD
         <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
             primary={t('settings.modals.misc.fields.autoLogClean')}
@@ -263,6 +391,13 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <Select
             size="small"
             sx={{ width: 160, '> div': { py: '7.5px' } }}
+=======
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Auto Log Clean")} />
+          <Select
+            size="small"
+            sx={{ width: 135, "> div": { py: "7.5px" } }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             value={values.autoLogClean}
             onChange={(e) =>
               setValues((v) => ({
@@ -271,6 +406,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
               }))
             }
           >
+<<<<<<< HEAD
             {/* 1: 1天, 2: 7天, 3: 30天, 4: 90天*/}
             {[
               {
@@ -301,6 +437,13 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 }),
                 value: 4,
               },
+=======
+            {[
+              { key: t("Never Clean"), value: 0 },
+              { key: t("Retain _n Days", { n: 7 }), value: 1 },
+              { key: t("Retain _n Days", { n: 30 }), value: 2 },
+              { key: t("Retain _n Days", { n: 90 }), value: 3 },
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             ].map((i) => (
               <MenuItem key={i.value} value={i.value}>
                 {i.key}
@@ -309,6 +452,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
+<<<<<<< HEAD
         <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
             primary={t('settings.modals.misc.fields.autoDelayDetection')}
@@ -374,6 +518,16 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <TooltipIcon
             title={t('settings.modals.misc.tooltips.defaultLatencyTest')}
             sx={{ opacity: '0.7' }}
+=======
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText
+            primary={t("Default Latency Test")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TooltipIcon
+            title={t("Default Latency Test Info")}
+            sx={{ opacity: "0.7" }}
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           />
           <TextField
             autoComplete="new-password"
@@ -381,19 +535,30 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck="false"
+<<<<<<< HEAD
             sx={{ width: 250, marginLeft: 'auto' }}
             value={values.defaultLatencyTest}
             placeholder="http://cp.cloudflare.com"
+=======
+            sx={{ width: 250, marginLeft: "auto" }}
+            value={values.defaultLatencyTest}
+            placeholder="http://cp.cloudflare.com/generate_204"
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             onChange={(e) =>
               setValues((v) => ({ ...v, defaultLatencyTest: e.target.value }))
             }
           />
         </ListItem>
 
+<<<<<<< HEAD
         <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
             primary={t('settings.modals.misc.fields.defaultLatencyTimeout')}
           />
+=======
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText primary={t("Default Latency Timeout")} />
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
           <TextField
             autoComplete="new-password"
             size="small"
@@ -410,6 +575,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 defaultLatencyTimeout: parseInt(e.target.value),
               }))
             }
+<<<<<<< HEAD
             slotProps={{
               input: {
                 endAdornment: (
@@ -418,10 +584,21 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                   </InputAdornment>
                 ),
               },
+=======
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">{t("millis")}</InputAdornment>
+              ),
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
             }}
           />
         </ListItem>
       </List>
     </BaseDialog>
+<<<<<<< HEAD
   )
 })
+=======
+  );
+});
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

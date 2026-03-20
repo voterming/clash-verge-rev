@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { styled } from '@mui/material'
 
 const Loading = styled('div')`
+=======
+import { styled } from "@mui/material";
+
+const Loading = styled("div")`
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   position: relative;
   display: flex;
   height: 100%;
@@ -31,11 +37,19 @@ const Loading = styled('div')`
       transform: scale(1);
     }
   }
+<<<<<<< HEAD
 `
 
 const LoadingItem = styled('div')(({ theme }) => ({
   background: theme.palette.text.secondary,
 }))
+=======
+`;
+
+const LoadingItem = styled("div")(({ theme }) => ({
+  background: theme.palette.text.secondary,
+}));
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
 
 export const BaseLoading = () => {
   return (
@@ -44,5 +58,10 @@ export const BaseLoading = () => {
       <LoadingItem />
       <LoadingItem />
     </Loading>
+<<<<<<< HEAD
   )
 }
+=======
+  );
+};
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224

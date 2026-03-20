@@ -6,6 +6,7 @@
   "permissions": [
     "global-shortcut:default",
     "updater:default",
+<<<<<<< HEAD
     "dialog:default",
     "dialog:allow-ask",
     "dialog:allow-message",
@@ -26,5 +27,11 @@
       "allow": [{ "url": "https://*/*" }, { "url": "http://*/*" }]
     },
     "mihomo:default"
+=======
+    "deep-link:default",
+    "window-state:default",
+    "window-state:default",
+    "autostart:default"
+>>>>>>> 3ea0d20e2cf7cf08c7e8e8c098ff725c4ea92224
   ]
 }
